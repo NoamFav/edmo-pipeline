@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    labels: ["deps","github-actions"]
+    open-pull-requests-limit: 10
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    labels: ["deps","python"]
+    versioning-strategy: increase
+    insecure-external-code-execution: allow
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    labels: ["deps","js"]
