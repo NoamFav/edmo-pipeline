@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  nlp:
+    build: .
+    command: uvicorn src.python_services.nlp.app:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+
+  asr:
+    build: .
+    command: uvicorn src.python_services.asr.app:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./data:/app/data
+
+  diarization:
+    build: .
+    command: uvicorn src.python_services.diarization.app:app --host 0.0.0.0 --port 8003
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./data:/app/data

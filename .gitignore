@@ -997,3 +997,59 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
+
+# EDMO Pipeline specific
+data/raw/*
+data/processed/*
+data/features/*
+data/outputs/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/features/.gitkeep
+!data/outputs/.gitkeep
+
+# Python virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Models
+*.pth
+*.pt
+*.ckpt
+data/models/*
+!data/models/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# Build artifacts
+src/cpp_native/build/
+bin/
+*.so
+*.dylib
+*.dll
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Go
+src/go_core/go.sum
