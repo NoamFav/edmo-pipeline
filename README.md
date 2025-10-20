@@ -11,6 +11,7 @@
 The EDMO Pipeline analyzes student communication and collaboration during educational robotics tasks, providing teachers with data-driven insights into soft skills development.
 
 ### Key Features
+
 - 🎤 **Multimodal Analysis**: Audio, video, and robot interaction data
 - 🤖 **Advanced NLP**: Speech-to-text, diarization, emotion detection, embeddings
 - 📊 **Clustering Analysis**: Discover communication patterns and collaboration strategies
@@ -26,6 +27,7 @@ The EDMO Pipeline analyzes student communication and collaboration during educat
 - **Program**: BSc Data Science and AI
 
 ### Team Members
+
 1. Noam Favier (i6349778)
 2. Daan Vankan (i6331424)
 3. Alexandros Ntoouz/Dawes (i6323296)
@@ -37,6 +39,7 @@ The EDMO Pipeline analyzes student communication and collaboration during educat
 ## Quick Start
 
 ### Prerequisites
+
 - Python >= 3.10
 - Go >= 1.21
 - FFmpeg
@@ -79,28 +82,31 @@ uvicorn src.python_services.nlp.app:app --port 8001
 ### Pipeline Components
 
 1. **Data Preprocessing**
-   - Audio normalization (16kHz mono WAV)
-   - Video frame extraction
-   - Robot log parsing and synchronization
+
+    - Audio normalization (16kHz mono WAV)
+    - Video frame extraction
+    - Robot log parsing and synchronization
 
 2. **Feature Extraction**
-   - Speech-to-Text (Whisper)
-   - Speaker Diarization (Pyannote.audio)
-   - Emotion Detection (Fine-tuned Transformers)
-   - Prosodic Features (Librosa)
-   - Sentence Embeddings (E5/BERT)
-   - Robot Interaction Metrics
+
+    - Speech-to-Text (Whisper)
+    - Speaker Diarization (Pyannote.audio)
+    - Emotion Detection (Fine-tuned Transformers)
+    - Prosodic Features (Librosa)
+    - Sentence Embeddings (E5/BERT)
+    - Robot Interaction Metrics
 
 3. **Analysis**
-   - Dimensionality Reduction (PCA/t-SNE)
-   - Fuzzy C-Means Clustering
-   - Pattern Discovery
-   - PISA CPS Framework Validation
+
+    - Dimensionality Reduction (PCA/t-SNE)
+    - Fuzzy C-Means Clustering
+    - Pattern Discovery
+    - PISA CPS Framework Validation
 
 4. **Output Generation**
-   - Student psychological profiles
-   - Timeline visualizations
-   - Teacher feedback reports
+    - Student psychological profiles
+    - Timeline visualizations
+    - Teacher feedback reports
 
 ### Technology Stack
 
@@ -169,6 +175,7 @@ make docs
 ## Research Background
 
 This project builds on research in:
+
 - **Multimodal Learning Analytics** (Ma et al., 2022, 2024; Spikol et al., 2017)
 - **Communication Analysis** (Tsan et al., 2021; D'Angelo & Rajarathnam, 2024)
 - **Educational Robotics** (Malinverni et al., 2021; Möckel et al., 2020)
@@ -177,16 +184,19 @@ This project builds on research in:
 ## Objectives
 
 ### O1: Discover Communication Patterns
+
 Identify patterns in student communication features using data-driven methods (clustering) and validate against the PISA CPS framework.
 
 **KPI**: >75% accuracy in detecting collaborative skills
 
 ### O2: Analyze Pattern-Success Relationships
+
 Explore how communication patterns relate to task success (robot performance metrics).
 
 **KPI**: Clear visualizations showing dependencies between CPS skills and performance
 
 ### O3: Develop Teacher Feedback System
+
 Generate constructive, non-evaluative feedback for teachers on students' soft skills.
 
 **KPI**: >75% alignment with teacher assessments
@@ -216,9 +226,84 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 ## Contact
 
 For questions or collaboration inquiries, please contact the project coordinators:
+
 - Katharina Schüller
 - Rico Möckel
 
 ---
 
 **Status**: Phase 1 Complete (Prototyping) | Phase 2 In Progress (Development)
+
+```mermaid
+graph TD
+    A[Project Root] --> B[config]
+    B --> B1[dev/config.yaml]
+    B --> B2[prod/config.yaml]
+    B --> B3[test/]
+
+    A --> C[data]
+    C --> C1[features → {emotion, robot, speech}]
+    C --> C2[models/]
+    C --> C3[outputs → {clusters, feedback, visualizations}]
+    C --> C4[processed → {audio, diarization, transcripts}]
+    C --> C5[raw → {audio, robot_logs, video}]
+
+    A --> D[docs]
+    D --> D1[agenda.md]
+    D --> D2[api/services.md]
+    D --> D3[architecture/overview.md]
+    D --> D4[guides → {development, setup/installation.md, usage/quickstart.md}]
+    D --> D5[PROJECT_SUMMARY.md]
+    D --> D6[research/]
+
+    A --> E[experiments]
+    E --> E1[exploratory/]
+    E --> E2[prototypes/]
+    E --> E3[validation/]
+
+    A --> F[notebooks]
+    F --> F1[clustering/]
+    F --> F2[eda/]
+    F --> F3[feature_analysis/]
+
+    A --> G[scripts]
+    G --> G1[analysis/]
+    G --> G2[deployment/start_services.sh]
+    G --> G3[preprocessing/download_models.sh]
+    G --> G4[setup/run_tests.sh]
+
+    A --> H[src]
+    H --> H1[cpp_native → {audio, video, whisper, video_tools.cpp, whisper_runner.cpp}]
+    H --> H2[data_pipeline → {convert_audio.sh, extract_frames.sh, preprocess.py}]
+    H --> H3[go_core → {audio.go, pipeline.go, utils.go, video.go}]
+    H --> H4[interfaces → {data_format.md, nlp_api.md}]
+    H --> H5[nlp → {app.py, processor.py, strategies.py}]
+    H --> H6[python_services]
+    H6 --> H6a[asr/app.py]
+    H6 --> H6b[clustering/app.py]
+    H6 --> H6c[diarization/app.py]
+    H6 --> H6d[emotion/app.py]
+    H6 --> H6e[nlp/]
+    H6 --> H6f[visualization/app.py]
+    H --> H7[shared → {config.yaml, constants.go, schema.json}]
+    H --> H8[main.py]
+
+    A --> I[tests]
+    I --> I1[e2e/]
+    I --> I2[integration → {pipeline, services}]
+    I --> I3[unit → {cpp, go, python}]
+    I --> I4[fixtures → {audio, logs, video}]
+
+    A --> J[Root Files]
+    J --> J1[CHANGELOG.md]
+    J --> J2[CONTRIBUTING.md]
+    J --> J3[CODE_OF_CONDUCT.md]
+    J --> J4[LICENSE]
+    J --> J5[README.md]
+    J --> J6[Dockerfile]
+    J --> J7[docker-compose.yml]
+    J --> J8[Makefile]
+    J --> J9[requirements.txt]
+    J --> J10[requirements-dev.txt]
+    J --> J11[SECURITY.md]
+```
