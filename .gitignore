@@ -145,6 +145,8 @@ nunit-*.xml
 [Dd]ebugPS/
 [Rr]eleasePS/
 dlldata.c
+:qall
+
 
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
@@ -999,15 +1001,6 @@ vite.config.ts.timestamp-*
 
 
 # EDMO Pipeline specific
-data/raw/*
-data/processed/*
-data/features/*
-data/outputs/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/features/.gitkeep
-!data/outputs/.gitkeep
-
 # Python virtual environment
 venv/
 .venv/
@@ -1018,8 +1011,7 @@ ENV/
 *.pth
 *.pt
 *.ckpt
-data/models/*
-!data/models/.gitkeep
+
 
 # Logs
 logs/

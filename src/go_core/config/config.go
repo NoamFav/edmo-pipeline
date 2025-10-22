@@ -64,12 +64,9 @@ func Load() (*Root, error) {
 			if err = yaml.NewDecoder(f).Decode(&cfg); err == nil {
 				return &cfg, nil
 			}
-
 		}
 	}
 	return nil, err
 }
 
-func DurSeconds(n int) time.Duration {
-	return time.Duration(n) * time.Second
-}
+func DurSeconds(n int) time.Duration { return time.Duration(n) * time.Second }

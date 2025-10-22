@@ -8,6 +8,7 @@ app = FastAPI(title="ASR Service", version="0.1.0")
 
 # Load model on startup
 model = None
+force_lang = os.getenv("WHISPER_LANG", "")
 
 
 @app.on_event("startup")
@@ -31,6 +32,7 @@ class TranscriptionResponse(BaseModel):
 @app.post("/transcribe", response_model=TranscriptionResponse)
 async def transcribe_audio(file: UploadFile = File(...)):
     """Transcribe audio file using Whisper."""
+    assert file.filename != None, "filename missing"
     if not file.filename.endswith((".wav", ".mp3", ".m4a")):
         raise HTTPException(400, "Unsupported file format")
 
@@ -41,7 +43,10 @@ async def transcribe_audio(file: UploadFile = File(...)):
         tmp_path = tmp.name
 
     try:
-        result = model.transcribe(tmp_path, language="nl")
+        kwargs = {"fp16": False}
+        if force_lang:
+            kwargs["language"] = force_lang  # e.g. "en", "nl"
+        result = model.transcribe(tmp_path, **kwargs)
         segments = [
             TranscriptionSegment(
                 start=seg["start"],

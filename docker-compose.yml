@@ -1,27 +1,44 @@
-version: '3.8'
+version: "3.8"
+
+x-common: &common
+    build: .
+    image: edmo-services:py310
+    restart: unless-stopped
+    volumes:
+        - ./data:/app/data
+        - ./config:/app/config
+    environment:
+        - WHISPER_MODEL=base
+        - HF_HOME=/app/data/models/hf
+        - TRANSFORMERS_CACHE=/app/data/models/hf
 
 services:
-  nlp:
-    build: .
-    command: uvicorn src.python_services.nlp.app:app --host 0.0.0.0 --port 8001
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./data:/app/data
-      - ./config:/app/config
+    nlp:
+        <<: *common
+        command: uvicorn src.nlp.app:app --host 0.0.0.0 --port 8001
+        ports: ["8001:8001"]
 
-  asr:
-    build: .
-    command: uvicorn src.python_services.asr.app:app --host 0.0.0.0 --port 8002
-    ports:
-      - "8002:8002"
-    volumes:
-      - ./data:/app/data
+    asr:
+        <<: *common
+        command: uvicorn src.python_services.asr.app:app --host 0.0.0.0 --port 8002
+        ports: ["8002:8002"]
 
-  diarization:
-    build: .
-    command: uvicorn src.python_services.diarization.app:app --host 0.0.0.0 --port 8003
-    ports:
-      - "8003:8003"
-    volumes:
-      - ./data:/app/data
+    diarization:
+        <<: *common
+        command: uvicorn src.python_services.diarization.app:app --host 0.0.0.0 --port 8003
+        ports: ["8003:8003"]
+
+    emotion:
+        <<: *common
+        command: uvicorn src.python_services.emotion.app:app --host 0.0.0.0 --port 8004
+        ports: ["8004:8004"]
+
+    clustering:
+        <<: *common
+        command: uvicorn src.python_services.clustering.app:app --host 0.0.0.0 --port 8005
+        ports: ["8005:8005"]
+
+    visualization:
+        <<: *common
+        command: uvicorn src.python_services.visualization.app:app --host 0.0.0.0 --port 8006
+        ports: ["8006:8006"]

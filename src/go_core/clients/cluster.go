@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -22,13 +24,26 @@ type ClusterResp struct {
 
 func (h *HTTP) Cluster(ctx context.Context, url string, features [][]float64, k, ncomp int) (*ClusterResp, error) {
 	reqBody, _ := json.Marshal(ClusterReq{Features: features, NClusters: k, NComponents: ncomp})
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, url+"/cluster", bytes.NewReader(reqBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url+"/cluster", bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Set("Content-Type", "application/json")
+
 	resp, err := h.c.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("cluster %s: %s", resp.Status, string(b))
+	}
+
 	var out ClusterResp
-	return &out, json.NewDecoder(resp.Body).Decode(&out)
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, fmt.Errorf("cluster decode: %w", err)
+	}
+	return &out, nil
 }

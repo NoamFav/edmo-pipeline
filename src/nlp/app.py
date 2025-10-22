@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from processor import analyze_text
+from .processor import analyze_text
 
 app = FastAPI()
 
