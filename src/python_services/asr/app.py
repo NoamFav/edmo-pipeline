@@ -32,9 +32,9 @@ class TranscriptionResponse(BaseModel):
 @app.post("/transcribe", response_model=TranscriptionResponse)
 async def transcribe_audio(file: UploadFile = File(...)):
     """Transcribe audio file using Whisper."""
-    assert file.filename != None, "filename missing"
-    if not file.filename.endswith((".wav", ".mp3", ".m4a")):
-        raise HTTPException(400, "Unsupported file format")
+    if file.filename is not None:
+        if not file.filename.endswith((".wav", ".mp3", ".m4a")):
+            raise HTTPException(400, "Unsupported file format")
 
     # Save uploaded file temporarily
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
