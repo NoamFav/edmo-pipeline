@@ -13,7 +13,7 @@ async def load_model():
     global classifier
     classifier = pipeline(
         "text-classification",
-        model="joeddav/distilbert-base-uncased-go-emotions-student",
+        model="j-hartmann/emotion-english-distilroberta-base",
         top_k=None,
     )
 

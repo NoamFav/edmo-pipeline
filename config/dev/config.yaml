@@ -57,7 +57,7 @@ features:
         embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
 
     emotion:
-        model: "joeddav/distilbert-base-uncased-go-emotions-student"
+        model: "j-hartmann/emotion-english-distilroberta-base"
 
     robot:
         metrics:
