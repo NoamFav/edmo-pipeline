@@ -42,3 +42,7 @@ services:
         <<: *common
         command: uvicorn src.python_services.visualization.app:app --host 0.0.0.0 --port 8006
         ports: ["8006:8006"]
+
+    nonverb_features:
+        <<: *common
+        command: uvicorn src.python_services.nonverb_features.app:app --host 0.0.0 --port 8007
