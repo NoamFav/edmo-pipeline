@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Body
 from pydantic import BaseModel
 import numpy as np
 from typing import Dict, List, Tuple
@@ -26,11 +26,11 @@ class SpeakerFeatures(BaseModel):
 
 class ConversationMetrics(BaseModel):
     num_speakers: int
-    total_speaking_time: float
-    overlap_duration: float
-    silence_duration: float
-    overlap_ratio: float
-    silence_ratio: float
+    total_speaking_time: float  # sum of speaking time of each speaker (if one speakes from 0 to 10, another from 5 to 15, then total_speaking_time=20)
+    overlap_duration: float  # how long overalps lasted overall
+    silence_duration: float  # how long silence lasted overall
+    overlap_ratio: float  # overlap_duration / audio_length
+    silence_ratio: float  # silence_duration / audio_length
     total_interruptions: int
     interruption_rate: float  # interruptions per minute
     
@@ -49,9 +49,9 @@ class DiarizationResponse(BaseModel):
 
 
 @app.post("/basic_metrics", response_model=BasicMetricsResponse)
-async def calculate_basic_metrics(diarization: DiarizationResponse,
-                                  conv_length,
-                                  percentiles: List[int] = [10, 25, 75, 90]):
+async def calculate_basic_metrics(diarization: DiarizationResponse = Body(..., description="Speaker diarization result"),
+                                  conv_length: float = Body(..., description="Total length of the conversation segment in seconds"),
+                                  percentiles: List[int] = Body([10, 25, 75, 90], description="Percentiles calculated on the turn lengths distribution, just leave the default")):
     return basic_metrics(diarization, conv_length, percentiles)
     
 
