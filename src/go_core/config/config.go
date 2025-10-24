@@ -18,6 +18,8 @@ type Services struct {
 	Emotion       Service `yaml:"emotion"`
 	Clustering    Service `yaml:"clustering"`
 	Visualization Service `yaml:"visualization"`
+	Nonverb       Service `yaml:"nonverb_features"`
+	RobotData     Service `yaml:"robot_data"`
 }
 type Audio struct {
 	SampleRate int    `yaml:"sample_rate"`

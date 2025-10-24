@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+	"github.com/maastricht-university/edmo-pipeline/clients"
 	"math"
 	"sort"
 )
@@ -86,4 +87,32 @@ func (p *Pipeline) toVector(w Window) []float64 {
 		vec = append(vec, w.Emotions[k])
 	}
 	return vec
+}
+
+func assignSpeakers(utts []Utterance, diar []clients.SpkSeg) {
+	j := 0
+	for i := range utts {
+		u := &utts[i]
+		bestSpk := ""
+		best := 0.0
+		for j < len(diar) && diar[j].End <= u.Start {
+			j++
+		}
+		for k := j; k < len(diar); k++ {
+			d := diar[k]
+			if d.Start >= u.End {
+				break
+			}
+			// overlap = max(0, min(u.End,d.End) - max(u.Start,d.Start))
+			start := math.Max(u.Start, d.Start)
+			end := math.Min(u.End, d.End)
+			if end > start {
+				if dur := end - start; dur > best {
+					best = dur
+					bestSpk = d.Speaker
+				}
+			}
+		}
+		u.Spk = bestSpk
+	}
 }

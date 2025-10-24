@@ -47,6 +47,16 @@ services:
         port: 8006
         url: "http://127.0.0.1:8006"
 
+    nonverb_features:
+        host: "localhost"
+        port: 8007
+        url: "http://127.0.0.1:8007"
+
+    robot_data:
+        host: "localhost"
+        port: 8008
+        url: "http://127.0.0.1:8008"
+
 features:
     time_window: 30 # seconds
     overlap: 15 # seconds
@@ -57,7 +67,7 @@ features:
         embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
 
     emotion:
-        model: "joeddav/distilbert-base-uncased-go-emotions-student"
+        model: "j-hartmann/emotion-english-distilroberta-base"
 
     robot:
         metrics:
