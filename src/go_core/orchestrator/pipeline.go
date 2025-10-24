@@ -88,7 +88,7 @@ func (p *Pipeline) Run(ctx context.Context, wavPath string) error {
 	log.Printf("features: windows=%d dim=%d", len(features), len(features[0]))
 
 	// Clustering
-	clus, err := p.http.Cluster(ctx, p.cfg.Services.Clustering.URL, features, 5, 3)
+	clus, err := p.http.Cluster(ctx, p.cfg.Services.Clustering.URL, features, 5, 3, "PCA")
 	if err != nil {
 		return err
 	}
