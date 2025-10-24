@@ -151,21 +151,33 @@ func (p *Pipeline) Run(ctx context.Context, wavPath string) error {
 		log.Println("no feature vectors; stopping")
 		return nil
 	}
-	featDim := 0
-	if len(features[0]) > 0 {
-		featDim = len(features[0])
-	}
-	log.Printf("feature matrix: %d x %d", len(features), featDim)
-	if p.cfg.Services.Clustering.URL == "" {
-		return errors.New("clustering service URL not configured")
-	}
-	if err := ctxErr(ctx); err != nil {
-		return err
-	}
-	clus, err := p.http.Cluster(ctx, p.cfg.Services.Clustering.URL, features, 5, 3)
-	if err != nil {
-		return err
-	}
+  features := make([][]float64, 0, len(windows))
+  for _, w := range windows {
+      features = append(features, w.Vector)
+  }
+  if len(features) == 0 {
+      log.Println("no feature vectors; stopping")
+      return nil
+  }
+
+  featDim := 0
+  if len(features) > 0 && len(features[0]) > 0 {
+      featDim = len(features[0])
+}
+log.Printf("feature matrix: %d x %d", len(features), featDim)
+
+if p.cfg.Services.Clustering.URL == "" {
+    return errors.New("clustering service URL not configured")
+}
+if err := ctxErr(ctx); err != nil {
+    return err
+}
+
+// pass "PCA" to use the new dim-reduction arg; omit it to use server default
+clus, err := p.http.Cluster(ctx, p.cfg.Services.Clustering.URL, features, 5, 3, "PCA")
+if err != nil {
+    return err
+}
 	if err := ctxErr(ctx); err != nil {
 		return err
 	}

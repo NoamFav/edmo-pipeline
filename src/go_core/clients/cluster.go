@@ -12,22 +12,40 @@ import (
 
 // --- Clustering (/cluster) ---
 type ClusterReq struct {
-	Features    [][]float64 `json:"features"`
-	NClusters   int         `json:"n_clusters"`
-	NComponents int         `json:"n_components"`
-}
-type ClusterResp struct {
-	ClusterLabels     []int       `json:"cluster_labels"`
-	MembershipMatrix  [][]float64 `json:"membership_matrix"`
-	ReducedFeatures   [][]float64 `json:"reduced_features"`
-	ExplainedVariance float64     `json:"explained_variance"`
+	Features     [][]float64 `json:"features"`
+	NClusters    int         `json:"n_clusters"`
+	NComponents  int         `json:"n_components"`
+	DimRedMethod string      `json:"dim_red_method,omitempty"`
 }
 
-func (h *HTTP) Cluster(ctx context.Context, url string, features [][]float64, k, ncomp int) (*ClusterResp, error) {
-	reqBody, err := json.Marshal(ClusterReq{Features: features, NClusters: k, NComponents: ncomp})
+type ClusterResp struct {
+	ClusterLabels              []int       `json:"cluster_labels"`
+	MembershipMatrix           [][]float64 `json:"membership_matrix"`
+	ReducedFeatures            [][]float64 `json:"reduced_features"`
+	TotalExplainedVariance     float64     `json:"explained_variance"`
+	DimensionExplainedVariance []float64   `json:"dimension_explained_variance"`
+	DimensionComponents        [][]float64 `json:"dimension_components"`
+	ReductionUsed              string      `json:"reduction_used"`
+}
+
+// Cluster calls /cluster. Optional dim-reduction method can be passed as the 6th arg.
+// Example: Cluster(ctx, url, feats, 5, 3, "pca")  // or leave empty for default
+func (h *HTTP) Cluster(ctx context.Context, url string, features [][]float64, k, ncomp int, method ...string) (*ClusterResp, error) {
+	m := ""
+	if len(method) > 0 {
+		m = method[0]
+	}
+
+	reqBody, err := json.Marshal(ClusterReq{
+		Features:     features,
+		NClusters:    k,
+		NComponents:  ncomp,
+		DimRedMethod: m,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("cluster marshal: %w", err)
 	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url+"/cluster", bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, err

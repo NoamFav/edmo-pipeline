@@ -17,6 +17,9 @@ type TimelineReq struct {
 	RobotProgress []float64 `json:"robot_progress,omitempty"`
 	OutputDir     string    `json:"output_dir,omitempty"`
 }
+
+
+
 type TimelineResp struct{ Status, Path string }
 
 func (h *HTTP) GenerateTimeline(ctx context.Context, url string, req TimelineReq) (*TimelineResp, error) {

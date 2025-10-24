@@ -8,7 +8,7 @@ This document outlines how to get involved and the process we follow.
 ## Getting Started
 
 1. **Fork** the repository
-2. **Clone** your fork locally  
+2. **Clone** your fork locally
    ```sh
    git clone https://github.com/<your-username>/<repo-name>.git
 
