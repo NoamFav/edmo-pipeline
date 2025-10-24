@@ -7,4 +7,10 @@ import (
 
 type HTTP struct{ c *http.Client }
 
-func NewHTTP() *HTTP { return &HTTP{c: &http.Client{Timeout: 60 * time.Second}} }
+func NewHTTP() *HTTP {
+	return &HTTP{
+		c: &http.Client{
+			Timeout: 30 * time.Minute,
+		},
+	}
+}
