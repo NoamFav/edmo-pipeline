@@ -6,7 +6,6 @@ import os
 
 app = FastAPI(title="ASR Service", version="0.1.0")
 
-# Load model on startup
 model = None
 force_lang = os.getenv("WHISPER_LANG", "")
 

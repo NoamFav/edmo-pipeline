@@ -4,7 +4,6 @@ from transformers import pipeline
 
 app = FastAPI(title="Emotion Service", version="0.1.0")
 
-# Load emotion classifier on startup
 classifier = None
 
 

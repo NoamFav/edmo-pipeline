@@ -11,8 +11,6 @@ class SpeakerFeatures(BaseModel):
     total_turns: int
     speech_ratio: float  # total_speaking_duration / conv_length
 
-    # A bunch of statistics on the turn lengths distribution
-    # --------------------------
     mean_turn_duration: float
     median_turn_duration: float
     std_turn_duration: float

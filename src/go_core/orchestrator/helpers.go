@@ -16,6 +16,12 @@ func (p *Pipeline) window(utts []Utterance) []Window {
 	w := float64(p.cfg.Features.TimeWindow)
 	o := float64(p.cfg.Features.Overlap)
 	step := w - o
+	if w <= 0 {
+		w = 30
+	}
+	if step <= 0 {
+		step = w
+	}
 
 	var out []Window
 	for t0 := start; t0 < end; t0 += step {
@@ -37,18 +43,30 @@ func (p *Pipeline) aggregate(w *Window) {
 		return
 	}
 	total := 0.0
-	w.SpeakingShare = map[string]float64{}
+	if w.SpeakingShare == nil {
+		w.SpeakingShare = make(map[string]float64, 4)
+	} else {
+		// reset without realloc
+		for k := range w.SpeakingShare {
+			delete(w.SpeakingShare, k)
+		}
+	}
+
 	// naive overlap estimate and speaking time
 	type edge struct {
 		t     float64
 		delta int
 	}
 	var edges []edge
-	for _, u := range w.Utts {
+	for i := range w.Utts {
+		u := w.Utts[i]
 		d := math.Max(0, u.End-u.Start)
 		total += d
 		w.SpeakingShare[u.Spk] += d
 		edges = append(edges, edge{t: u.Start, delta: +1}, edge{t: u.End, delta: -1})
+	}
+	if len(edges) == 0 {
+		return
 	}
 	sort.Slice(edges, func(i, j int) bool { return edges[i].t < edges[j].t })
 	active := 0
@@ -74,7 +92,8 @@ func (p *Pipeline) aggregate(w *Window) {
 
 func (p *Pipeline) toVector(w Window) []float64 {
 	meanLen := 0.0
-	for _, u := range w.Utts {
+	for i := range w.Utts {
+		u := w.Utts[i]
 		meanLen += (u.End - u.Start)
 	}
 	if n := float64(len(w.Utts)); n > 0 {
@@ -90,6 +109,9 @@ func (p *Pipeline) toVector(w Window) []float64 {
 }
 
 func assignSpeakers(utts []Utterance, diar []clients.SpkSeg) {
+	if len(utts) == 0 || len(diar) == 0 {
+		return
+	}
 	j := 0
 	for i := range utts {
 		u := &utts[i]
