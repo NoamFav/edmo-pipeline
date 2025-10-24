@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import numpy as np
-import sklearn
+import sklearn.decomposition as skd
 from skfuzzy import cluster as fcluster  # explicit submodule import
 from abc import ABC, abstractmethod
-d
 
 app = FastAPI(title="Clustering Service", version="0.1.0")
 
@@ -35,10 +34,10 @@ class DimensionalityReductionMethod(ABC):
 
 
 class PCA(DimensionalityReductionMethod):
-    pca: sklearn.decomposition.PCA
+    pca: skd.PCA
 
     def __init__(self, n_dimensions: int):
-        self.pca = sklearn.decomposition.PCA(n_components=n_dimensions)
+        self.pca = skd.PCA(n_components=n_dimensions)
 
     def fit(self, data: np.ndarray):
         x_reduced = self.pca.fit_transform(data)
@@ -56,12 +55,12 @@ class PCA(DimensionalityReductionMethod):
 
 
 class SPCA(DimensionalityReductionMethod):
-    spca: sklearn.decomposition.SparsePCA
+    spca: skd.SparsePCA
     original_data: np.ndarray
     transformed_data: np.ndarray
 
     def __init__(self, n_dimensions: int):
-        self.spca = sklearn.decomposition.SparsePCA(n_components=n_dimensions)
+        self.spca = skd.SparsePCA(n_components=n_dimensions)
         return
 
     def fit(self, data: np.ndarray):
@@ -74,7 +73,16 @@ class SPCA(DimensionalityReductionMethod):
         component_var = []
         for i in range(self.spca.n_components):
             # Project X onto the i-th component
-            x_i = np.dot(self.transformed_data[:, i:i + 1], self.spca.components_[i:i + 1, :])
+            x_i = np.dot(
+                self.transformed_data[
+                    :,
+                    i : i + 1,
+                ],
+                self.spca.components_[
+                    i : i + 1,
+                    :,
+                ],
+            )
 
             # Compute how much total variance this component explains
             var_i = np.var(x_i, axis=0).sum()
@@ -96,14 +104,19 @@ class SPCA(DimensionalityReductionMethod):
         recon_var = np.var(x_reconstructed, axis=0).sum()
 
         explained_variance_ratio = recon_var / original_var
-        print("Approximate total explained variance ratio:", explained_variance_ratio)
+        print(
+            "Approximate total explained variance ratio:",
+            explained_variance_ratio,
+        )
         return explained_variance_ratio
 
     def components(self):
         return self.spca.components_
 
 
-def create_dim_red_method(kind: str, n_dimensions: int = 2) -> DimensionalityReductionMethod:
+def create_dim_red_method(
+    kind: str, n_dimensions: int = 2
+) -> DimensionalityReductionMethod:
     # Factory for the dim red method choice, can return PCA or SPCA
     DIMENSIONALITY_REDUCTION_CLASSES = {
         "PCA": PCA,
@@ -129,6 +142,7 @@ class ClusterResponse(BaseModel):
     explained_variance: float
     explained_variance_per_dimension: list[float]
     dimension_components: list[list[float]]
+    reduction_used: str | None = None
 
 
 @app.post("/cluster", response_model=ClusterResponse)
@@ -154,7 +168,7 @@ async def cluster_features(request: ClusterRequest):
         explained_per_dimension: list[float] = [1.0]
         dimension_components: np.ndarray = np.array([])
     else:
-        dim_red = create_dim_red_method(request.dim_reduction_method)
+        dim_red = create_dim_red_method(request.dim_red_method)
         X_reduced = dim_red.fit(X)
         explained = dim_red.total_explained_variance()
         explained_per_dimension = dim_red.dimension_explained_variance()
@@ -195,7 +209,9 @@ async def cluster_features(request: ClusterRequest):
         explained_variance=explained,
         explained_variance_per_dimension=explained_per_dimension,
         dimension_components=dimension_components.tolist(),
+        reduction_used=request.dim_red_method,
     )
+
 
 @app.get("/health")
 async def health_check():

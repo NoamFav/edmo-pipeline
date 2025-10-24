@@ -18,8 +18,6 @@ type TimelineReq struct {
 	OutputDir     string    `json:"output_dir,omitempty"`
 }
 
-
-
 type TimelineResp struct{ Status, Path string }
 
 func (h *HTTP) GenerateTimeline(ctx context.Context, url string, req TimelineReq) (*TimelineResp, error) {
@@ -88,6 +86,46 @@ func (h *HTTP) GenerateRadar(ctx context.Context, url string, req RadarReq) (*Ra
 	var out RadarResp
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		return nil, fmt.Errorf("viz radar decode: %w", err)
+	}
+	return &out, nil
+}
+
+type VarianceChartReq struct {
+	TotalVariance        float64   `json:"total_variance"`
+	VariancePerDimension []float64 `json:"variance_per_dimension"`
+	ReductionUsed        string    `json:"reduction_used"`
+	OutputDir            string    `json:"output_dir,omitempty"`
+}
+
+type VarianceChartResp struct{ Status, Path string }
+
+func (h *HTTP) GenerateVarianceChart(ctx context.Context, url string, req VarianceChartReq) (*VarianceChartResp, error) {
+	b, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("variance marshal: %w", err)
+	}
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, url+"/generate-variance-chart", bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	r.Header.Set("Content-Type", "application/json")
+
+	resp, err := h.c.Do(r)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		const maxErr = 4096
+		lb := io.LimitReader(resp.Body, maxErr)
+		body, _ := io.ReadAll(lb)
+		return nil, fmt.Errorf("viz variance %s: %s", resp.Status, strings.TrimSpace(string(body)))
+	}
+
+	var out VarianceChartResp
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, fmt.Errorf("viz variance decode: %w", err)
 	}
 	return &out, nil
 }

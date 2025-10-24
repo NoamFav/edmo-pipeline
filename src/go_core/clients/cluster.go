@@ -19,13 +19,13 @@ type ClusterReq struct {
 }
 
 type ClusterResp struct {
-	ClusterLabels              []int       `json:"cluster_labels"`
-	MembershipMatrix           [][]float64 `json:"membership_matrix"`
-	ReducedFeatures            [][]float64 `json:"reduced_features"`
-	TotalExplainedVariance     float64     `json:"explained_variance"`
-	DimensionExplainedVariance []float64   `json:"dimension_explained_variance"`
-	DimensionComponents        [][]float64 `json:"dimension_components"`
-	ReductionUsed              string      `json:"reduction_used"`
+	ClusterLabels                 []int       `json:"cluster_labels"`
+	MembershipMatrix              [][]float64 `json:"membership_matrix"`
+	ReducedFeatures               [][]float64 `json:"reduced_features"`
+	ExplainedVariance             float64     `json:"explained_variance"`
+	ExplainedVariancePerDimension []float64   `json:"explained_variance_per_dimension"`
+	DimensionComponents           [][]float64 `json:"dimension_components"`
+	ReductionUsed                 string      `json:"reduction_used"` // optional; may be ""
 }
 
 // Cluster calls /cluster. Optional dim-reduction method can be passed as the 6th arg.

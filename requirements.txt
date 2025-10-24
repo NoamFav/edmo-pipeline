@@ -14,6 +14,7 @@ torch>=2.6.0
 transformers>=4.38,<5
 sentence-transformers>=2.2,<3
 sentencepiece>=0.1.99
+opencv-python>=4.8.0
 
 # NLP utilities
 spacy>=3.7,<3.8
