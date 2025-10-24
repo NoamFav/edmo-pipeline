@@ -47,3 +47,10 @@ services:
         <<: *common
         command: uvicorn src.python_services.nonverb_features.app:app --host 0.0.0 --port 8007
         ports: ["8007:8007"]
+
+    #robot_data ?
+
+    movement_tracker:
+        <<: *common
+        command: uvicorn src.python_services.movement_tracker.app:app --host 0.0.0 --port 8009
+        ports: ["8009:8009"]

@@ -57,6 +57,11 @@ services:
         port: 8008
         url: "http://127.0.0.1:8008"
 
+    movement_tracker:
+        host: "localhost"
+        port: 8009
+        url: "http://127.0.0.1:8009"
+
 features:
     time_window: 30 # seconds
     overlap: 15 # seconds
