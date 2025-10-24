@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import Optional
+from typing import Optional
 
 matplotlib.use("Agg")  # headless backend must be set before pyplot import
 
