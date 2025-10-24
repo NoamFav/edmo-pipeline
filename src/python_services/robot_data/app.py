@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-"""
-Complete Session Analysis Service — FastAPI endpoints for log parsing, analysis, and visualization
-"""
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -70,7 +65,9 @@ class PlotRequest(BaseModel):
 # Parsing
 # ───────────────────────────────────────────────────────────────────────────
 
-LINE_RE = re.compile(r"^(?P<time>\d{2}:\d{2}:\d{2}\.\d+)\s+\[.*?\]\s+(?P<msg>.*)$")
+LINE_RE = re.compile(
+    r"^(?P<time>\d{2}:\d{2}:\d{2}\.\d+)\s+\[.*?\]\s+(?P<msg>.*)$",
+)
 PATTERNS = [
     (
         re.compile(r"(?P<who>[ABCD]) is in control\."),
@@ -85,7 +82,9 @@ PATTERNS = [
         lambda m: ("joined", m.group("who"), None),
     ),
     (
-        re.compile(r"Frequency of all oscillators set to (?P<val>[-+]?\d*\.?\d+)"),
+        re.compile(
+            r"Frequency of all oscillators set to (?P<val>[-+]?\d*\.?\d+)",
+        ),
         lambda m: ("set_frequency_all", "all", float(m.group("val"))),
     ),
 ]
@@ -110,12 +109,26 @@ def parse_line(line: str, src_file: str) -> Optional[Event]:
         return None
     tstr, msg = m.group("time"), m.group("msg")
     action, target, value = parse_message(msg)
-    return Event(time_to_seconds(tstr), tstr, src_file, action, target, value, msg)
+    return Event(
+        time_to_seconds(tstr),
+        tstr,
+        src_file,
+        action,
+        target,
+        value,
+        msg,
+    )
 
 
 def build_timeline(log_dir: Path) -> list[Event]:
     events = []
-    for fname in ["session.log", "User0.log", "User1.log", "User2.log", "User3.log"]:
+    for fname in [
+        "session.log",
+        "User0.log",
+        "User1.log",
+        "User2.log",
+        "User3.log",
+    ]:
         p = log_dir / fname
         if not p.exists():
             continue
@@ -135,7 +148,15 @@ def export_csv(events: list[Event], out_csv: Path):
     with out_csv.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(
-            ["time_str", "t_rel_s", "file", "action", "target", "value", "message"]
+            [
+                "time_str",
+                "t_rel_s",
+                "file",
+                "action",
+                "target",
+                "value",
+                "message",
+            ]
         )
         for ev in events:
             w.writerow(
@@ -156,13 +177,26 @@ def export_csv(events: list[Event], out_csv: Path):
 # ───────────────────────────────────────────────────────────────────────────
 
 
-def compute_control_intervals(df: pd.DataFrame) -> list[tuple[str, float, float]]:
+def compute_control_intervals(
+    df: pd.DataFrame,
+) -> list[tuple[str, float, float]]:
     intervals = []
     current_user, start_time = None, None
-    d = df[df["action"].isin(["control_start", "control_end"])].sort_values("t_rel_s")
+    d = df[
+        df["action"].isin(
+            [
+                "control_start",
+                "control_end",
+            ]
+        )
+    ].sort_values("t_rel_s")
 
     for _, row in d.iterrows():
-        t, action, user = float(row["t_rel_s"]), row["action"], row["target"]
+        t, action, user = (
+            float(row["t_rel_s"]),
+            row["action"],
+            row["target"],
+        )
         if action == "control_start":
             if current_user and start_time and t > start_time:
                 intervals.append((current_user, start_time, t - start_time))
@@ -179,7 +213,13 @@ def compute_control_intervals(df: pd.DataFrame) -> list[tuple[str, float, float]
     if current_user and start_time:
         t_end = float(df["t_rel_s"].max())
         if t_end > start_time:
-            intervals.append((current_user, start_time, t_end - start_time))
+            intervals.append(
+                (
+                    current_user,
+                    start_time,
+                    t_end - start_time,
+                )
+            )
     return intervals
 
 
@@ -199,9 +239,15 @@ def extract_features(csv_path: Path) -> dict:
     # Control fractions
     users = ["A", "B", "C", "D"]
     intervals = compute_control_intervals(df)
-    control_time = {
-        u: sum(dur for user, start, dur in intervals if user == u) for u in users
-    }
+    control_time = {}
+
+    for u in users:
+        total = 0
+        for user, start, dur in intervals:
+            if user == u:
+                total += dur
+        control_time[u] = total
+
     for u in users:
         feats[f"{u}_control_frac"] = (
             (control_time[u] / total_time) if total_time > 0 else 0.0
@@ -224,9 +270,14 @@ def extract_features(csv_path: Path) -> dict:
     feats["control_balance_index"] = float(np.std(vals))
 
     # Reaction time
-    changes = df[df["action"].isin(["set_frequency", "set_amplitude"])].sort_values(
-        "t_rel_s"
-    )
+    changes = df[
+        df["action"].isin(
+            [
+                "set_frequency",
+                "set_amplitude",
+            ]
+        )
+    ].sort_values("t_rel_s")
     starts = df[df["action"] == "control_start"].sort_values("t_rel_s")
     rts = []
     for _, srow in starts.iterrows():
@@ -305,16 +356,27 @@ def plot_temporal_evolution(df: pd.DataFrame, png_path: Path):
 
         # Entropy
         actions = window["action"].value_counts().values
-        entropy = (
-            float(-(actions / actions.sum() * np.log2(actions / actions.sum())).sum())
-            if len(actions)
-            else 0.0
-        )
+        if len(actions):
+            p = actions / actions.sum()
+            entropy = float(-(p * np.log2(p)).sum())
+        else:
+            entropy = 0.0
 
         row = {"t_mid": (t0 + t1) / 2, "entropy": entropy}
         for u in ["A", "B", "C", "D"]:
             u_time = sum(
-                max(0.0, min(t1, end) - max(t0, start)) for start, end in control[u]
+                max(
+                    0.0,
+                    min(
+                        t1,
+                        end,
+                    )
+                    - max(
+                        t0,
+                        start,
+                    ),
+                )
+                for start, end in control[u]
             )
             row[f"{u}_control_frac"] = u_time / window_s
         rows.append(row)
@@ -326,13 +388,29 @@ def plot_temporal_evolution(df: pd.DataFrame, png_path: Path):
     ax1.set_xlabel("Time (s)")
     ax1.set_ylabel("Control Fraction")
 
-    colors = {"A": "#1f77b4", "B": "#ff7f0e", "C": "#2ca02c", "D": "#d62728"}
+    colors = {
+        "A": "#1f77b4",
+        "B": "#ff7f0e",
+        "C": "#2ca02c",
+        "D": "#d62728",
+    }
     for u in ["A", "B", "C", "D"]:
-        ax1.plot(dfw["t_mid"], dfw[f"{u}_control_frac"], label=f"{u}", color=colors[u])
+        ax1.plot(
+            dfw["t_mid"],
+            dfw[f"{u}_control_frac"],
+            label=f"{u}",
+            color=colors[u],
+        )
     ax1.legend(loc="upper left")
 
     ax2 = ax1.twinx()
-    ax2.plot(dfw["t_mid"], dfw["entropy"], color="black", lw=2, label="Entropy")
+    ax2.plot(
+        dfw["t_mid"],
+        dfw["entropy"],
+        color="black",
+        lw=2,
+        label="Entropy",
+    )
     ax2.set_ylabel("Entropy (bits)")
     ax2.legend(loc="upper right")
 
@@ -435,10 +513,15 @@ async def api_plot(request: PlotRequest):
             plot_temporal_evolution(df, output)
         else:
             raise HTTPException(
-                status_code=400, detail=f"Unknown plot type: {request.plot_type}"
+                status_code=400,
+                detail=f"Unknown plot type: {request.plot_type}",
             )
 
-        return FileResponse(output, media_type="image/png", filename=output.name)
+        return FileResponse(
+            output,
+            media_type="image/png",
+            filename=output.name,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
