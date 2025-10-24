@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -21,20 +22,34 @@ func mkSessionDir(outputsRoot string) (string, string, error) {
 	sid := "session_" + ts
 	dir := filepath.Join(outputsRoot, sid)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("make session dir: %w", err)
 	}
 	return sid, dir, nil
 }
 
 func writeJSON(path string, v any) error {
-	f, err := os.Create(path)
+	dir := filepath.Dir(path)
+	tmp, err := os.CreateTemp(dir, ".tmp-*")
 	if err != nil {
-		return err
+		return fmt.Errorf("create temp for %s: %w", filepath.Base(path), err)
 	}
-	defer f.Close()
-	enc := json.NewEncoder(f)
+	tmpName := tmp.Name()
+	enc := json.NewEncoder(tmp)
 	enc.SetIndent("", "  ")
-	return enc.Encode(v)
+	if err := enc.Encode(v); err != nil {
+		tmp.Close()
+		os.Remove(tmpName)
+		return fmt.Errorf("encode %s: %w", filepath.Base(path), err)
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpName)
+		return fmt.Errorf("close temp %s: %w", filepath.Base(path), err)
+	}
+	if err := os.Rename(tmpName, path); err != nil {
+		os.Remove(tmpName)
+		return fmt.Errorf("rename %s: %w", filepath.Base(path), err)
+	}
+	return nil
 }
 
 func persist(outputsRoot, audioPath string, windows []Window, labels []int, membership [][]float64) (sessionID, windowsPath, clustersPath string, err error) {
@@ -54,7 +69,7 @@ func persist(outputsRoot, audioPath string, windows []Window, labels []int, memb
 		SessionID:   sid,
 		AudioPath:   audioPath,
 		GeneratedAt: time.Now(),
-		Windows:     nil, // keep windows in windows.json only
+		Windows:     nil,
 		Clusters:    labels,
 		Membership:  membership,
 	}

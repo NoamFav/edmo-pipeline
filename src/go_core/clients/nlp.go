@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // --- NLP (/analyze) ---
@@ -19,7 +20,10 @@ type NLPResp struct {
 }
 
 func (h *HTTP) NLP(ctx context.Context, url, text string) (*NLPResp, error) {
-	payload, _ := json.Marshal(NLPReq{Text: text})
+	payload, err := json.Marshal(NLPReq{Text: text})
+	if err != nil {
+		return nil, fmt.Errorf("nlp marshal: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url+"/analyze", bytes.NewReader(payload))
 	if err != nil {
 		return nil, err
@@ -33,8 +37,10 @@ func (h *HTTP) NLP(ctx context.Context, url, text string) (*NLPResp, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("nlp %s: %s", resp.Status, string(body))
+		const maxErr = 4096
+		lb := io.LimitReader(resp.Body, maxErr)
+		b, _ := io.ReadAll(lb)
+		return nil, fmt.Errorf("nlp %s: %s", resp.Status, strings.TrimSpace(string(b)))
 	}
 
 	var out NLPResp

@@ -52,20 +52,21 @@ func Load() (*Root, error) {
 	if env == "" {
 		env = "dev"
 	}
-	var guess []string = []string{
+	var guess = []string{
 		filepath.Join("config", env, "config.yaml"),
 		filepath.Join("src", "shared", "config.yaml"),
 	}
-	var f *os.File
 	var err error
 	for _, p := range guess {
-		f, err = os.Open(p)
-		if err == nil {
-			defer f.Close()
-			var cfg Root
-			if err = yaml.NewDecoder(f).Decode(&cfg); err == nil {
-				return &cfg, nil
-			}
+		f, err := os.Open(p)
+		if err != nil {
+			continue
+		}
+		var cfg Root
+		decErr := yaml.NewDecoder(f).Decode(&cfg)
+		f.Close()
+		if decErr == nil {
+			return &cfg, nil
 		}
 	}
 	return nil, err

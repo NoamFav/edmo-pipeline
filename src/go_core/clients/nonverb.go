@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type NVSpeakerFeatures struct {
@@ -54,7 +55,10 @@ type NVBasicMetricsResp struct {
 }
 
 func (h *HTTP) NonverbBasicMetrics(ctx context.Context, baseURL string, req NVBasicMetricsReq) (*NVBasicMetricsResp, error) {
-	b, _ := json.Marshal(req)
+	b, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("nonverb marshal: %w", err)
+	}
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, baseURL+"/basic_metrics", bytes.NewReader(b))
 	if err != nil {
 		return nil, err
@@ -68,8 +72,10 @@ func (h *HTTP) NonverbBasicMetrics(ctx context.Context, baseURL string, req NVBa
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("nonverb %s: %s", resp.Status, string(body))
+		const maxErr = 4096
+		lb := io.LimitReader(resp.Body, maxErr)
+		body, _ := io.ReadAll(lb)
+		return nil, fmt.Errorf("nonverb %s: %s", resp.Status, strings.TrimSpace(string(body)))
 	}
 	var out NVBasicMetricsResp
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {

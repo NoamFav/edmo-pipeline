@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // --- Clustering (/cluster) ---
@@ -23,7 +24,10 @@ type ClusterResp struct {
 }
 
 func (h *HTTP) Cluster(ctx context.Context, url string, features [][]float64, k, ncomp int) (*ClusterResp, error) {
-	reqBody, _ := json.Marshal(ClusterReq{Features: features, NClusters: k, NComponents: ncomp})
+	reqBody, err := json.Marshal(ClusterReq{Features: features, NClusters: k, NComponents: ncomp})
+	if err != nil {
+		return nil, fmt.Errorf("cluster marshal: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url+"/cluster", bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, err
@@ -37,8 +41,10 @@ func (h *HTTP) Cluster(ctx context.Context, url string, features [][]float64, k,
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("cluster %s: %s", resp.Status, string(b))
+		const maxErr = 4096
+		lb := io.LimitReader(resp.Body, maxErr)
+		b, _ := io.ReadAll(lb)
+		return nil, fmt.Errorf("cluster %s: %s", resp.Status, strings.TrimSpace(string(b)))
 	}
 
 	var out ClusterResp

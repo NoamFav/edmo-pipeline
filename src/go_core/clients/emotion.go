@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // --- Emotion (/detect) ---
@@ -23,7 +24,10 @@ type EmoResp struct {
 }
 
 func (h *HTTP) Emotion(ctx context.Context, url, text string) (*EmoResp, error) {
-	b, _ := json.Marshal(EmoReq{Text: text})
+	b, err := json.Marshal(EmoReq{Text: text})
+	if err != nil {
+		return nil, fmt.Errorf("emotion marshal: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url+"/detect", bytes.NewReader(b))
 	if err != nil {
 		return nil, err
@@ -37,8 +41,11 @@ func (h *HTTP) Emotion(ctx context.Context, url, text string) (*EmoResp, error) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("emotion %s: %s", resp.Status, string(body))
+		const maxErr = 4096
+		lb := io.LimitReader(resp.Body, maxErr)
+		body, _ := io.ReadAll(lb)
+		return nil, fmt.Errorf("emotion %s: %s",
+			resp.Status, strings.TrimSpace(string(body)))
 	}
 
 	var out EmoResp
