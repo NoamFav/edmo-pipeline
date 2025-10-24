@@ -52,6 +52,11 @@ services:
         port: 8007
         url: "http://127.0.0.1:8007"
 
+    robot_data:
+        host: "localhost"
+        port: 8008
+        url: "http://127.0.0.1:8008"
+
 features:
     time_window: 30 # seconds
     overlap: 15 # seconds

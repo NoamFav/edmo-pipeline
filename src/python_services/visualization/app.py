@@ -4,6 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import Optional
 
 matplotlib.use("Agg")  # headless backend must be set before pyplot import
 
@@ -13,7 +14,7 @@ app = FastAPI(title="Visualization Service", version="0.1.0")
 class TimelineRequest(BaseModel):
     timestamps: list[float]
     clusters: list[int]
-    robot_progress: list[float]
+    robot_progress: Optional[list[float]] = None
     output_dir: str = "outputs"
 
 

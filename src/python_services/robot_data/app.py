@@ -110,16 +110,14 @@ def compute_control_intervals(
     """Compute control intervals from control_start/control_end events."""
     intervals = []
     current_user, start_time = None, None
-    d = (
-        df[
-            df["action"].isin(
-                [
-                    "control_start",
-                    "control_end",
-                ]
-            )
-        ].sort_values("t_rel_s"),
-    )
+    d = df[
+        df["action"].isin(
+            [
+                "control_start",
+                "control_end",
+            ]
+        )
+    ].sort_values("t_rel_s")
 
     for _, row in d.iterrows():
         t, action, user = float(row["t_rel_s"]), row["action"], row["target"]
