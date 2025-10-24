@@ -19,36 +19,44 @@ app = FastAPI(title="Session Analysis Service", version="1.0.0")
 # Request/Response Models
 # ───────────────────────────────────────────────────────────────────────────
 
+
 class FeatureRequest(BaseModel):
     timeline_csv: str  # path to timeline.csv
     window_s: float = 10.0
+
 
 class FeatureResponse(BaseModel):
     features: dict[str, float]
     participant: Optional[str] = None
     session: Optional[str] = None
 
+
 class ClusterRequest(BaseModel):
     features: list[list[float]]
     n_clusters: int = 3
     n_components: int = 2
+
 
 class ClusterResponse(BaseModel):
     cluster_labels: list[int]
     pca_coords: list[list[float]]
     explained_variance: float
 
+
 class CorrelationRequest(BaseModel):
     features_csv: str  # path to features_all.csv
     feature_names: list[str]
+
 
 class CorrelationResponse(BaseModel):
     correlation_matrix: list[list[float]]
     feature_names: list[str]
 
+
 # ───────────────────────────────────────────────────────────────────────────
 # Feature Extraction (simplified from robotdata1.py)
 # ───────────────────────────────────────────────────────────────────────────
+
 
 def extract_features(csv_path: Path, window_s: float = 10.0) -> dict:
     """Extract session-level features from timeline CSV."""
@@ -77,7 +85,9 @@ def extract_features(csv_path: Path, window_s: float = 10.0) -> dict:
             control_time[u] += float(dur)
 
     for u in users:
-        feats[f"{u}_control_frac"] = (control_time[u] / total_time) if total_time > 0 else 0.0
+        feats[f"{u}_control_frac"] = (
+            (control_time[u] / total_time) if total_time > 0 else 0.0
+        )
 
     # Action entropy
     action_counts = df["action"].value_counts().values
@@ -93,11 +103,23 @@ def extract_features(csv_path: Path, window_s: float = 10.0) -> dict:
 
     return feats
 
-def compute_control_intervals(df: pd.DataFrame) -> list[tuple[str, float, float]]:
+
+def compute_control_intervals(
+    df: pd.DataFrame,
+) -> list[tuple[str, float, float]]:
     """Compute control intervals from control_start/control_end events."""
     intervals = []
     current_user, start_time = None, None
-    d = df[df["action"].isin(["control_start", "control_end"])].sort_values("t_rel_s")
+    d = (
+        df[
+            df["action"].isin(
+                [
+                    "control_start",
+                    "control_end",
+                ]
+            )
+        ].sort_values("t_rel_s"),
+    )
 
     for _, row in d.iterrows():
         t, action, user = float(row["t_rel_s"]), row["action"], row["target"]
@@ -118,16 +140,20 @@ def compute_control_intervals(df: pd.DataFrame) -> list[tuple[str, float, float]
 
     return intervals
 
+
 # ───────────────────────────────────────────────────────────────────────────
 # Endpoints
 # ───────────────────────────────────────────────────────────────────────────
+
 
 @app.post("/extract_features", response_model=FeatureResponse)
 async def api_extract_features(request: FeatureRequest):
     """Extract features from a timeline CSV."""
     path = Path(request.timeline_csv)
     if not path.exists():
-        raise HTTPException(status_code=404, detail=f"File not found: {request.timeline_csv}")
+        raise HTTPException(
+            status_code=404, detail=f"File not found: {request.timeline_csv}"
+        )
 
     try:
         features = extract_features(path, window_s=request.window_s)
@@ -135,12 +161,11 @@ async def api_extract_features(request: FeatureRequest):
         session = path.parent.name if len(path.parts) >= 1 else None
 
         return FeatureResponse(
-            features=features,
-            participant=participant,
-            session=session
+            features=features, participant=participant, session=session
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/cluster", response_model=ClusterResponse)
 async def api_cluster(request: ClusterRequest):
@@ -175,31 +200,37 @@ async def api_cluster(request: ClusterRequest):
     return ClusterResponse(
         cluster_labels=labels,
         pca_coords=X_reduced.tolist(),
-        explained_variance=explained
+        explained_variance=explained,
     )
+
 
 @app.post("/correlation", response_model=CorrelationResponse)
 async def api_correlation(request: CorrelationRequest):
     """Compute correlation matrix for selected features."""
     path = Path(request.features_csv)
     if not path.exists():
-        raise HTTPException(status_code=404, detail=f"File not found: {request.features_csv}")
+        raise HTTPException(
+            status_code=404, detail=f"File not found: {request.features_csv}"
+        )
 
     try:
         df = pd.read_csv(path)
         present = [c for c in request.feature_names if c in df.columns]
 
         if not present:
-            raise HTTPException(status_code=400, detail="No requested features found in CSV")
+            raise HTTPException(
+                status_code=400, detail="No requested features found in CSV"
+            )
 
         corr = df[present].corr(method="pearson")
 
         return CorrelationResponse(
             correlation_matrix=corr.values.tolist(),
-            feature_names=corr.columns.tolist()
+            feature_names=corr.columns.tolist(),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/health")
 async def health_check():
