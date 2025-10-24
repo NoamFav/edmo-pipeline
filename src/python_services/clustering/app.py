@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import numpy as np
 from sklearn.decomposition import PCA
-from skfuzzy import cluster as fcluster  # explicit submodule import
+from skfuzzy import cluster as fcluster
 
 app = FastAPI(title="Clustering Service", version="0.1.0")
 
@@ -33,25 +33,20 @@ async def cluster_features(request: ClusterRequest):
 
     n_samples, n_features = X.shape
 
-    # ---------- PCA (clamped) ----------
-    # must be 1..min(n_samples, n_features)
     n_comp_max = max(1, min(n_samples, n_features))
     n_comp = max(1, min(request.n_components, n_comp_max))
 
     if n_comp == 1 and (n_samples == 1 or n_features == 1):
-        # trivial 1D case: skip PCA math, treat as identity
-        X_reduced = X.reshape(n_samples, -1)[:, :1]  # shape (n, 1)
+        X_reduced = X.reshape(n_samples, -1)[:, :1]
         explained = 1.0
     else:
         pca = PCA(n_components=n_comp, random_state=0)
         X_reduced = pca.fit_transform(X)
         explained = float(np.sum(pca.explained_variance_ratio_))
 
-    # ---------- Clusters (clamped) ----------
-    # you cannot have more clusters than samples
     k = max(1, min(request.n_clusters, n_samples))
 
-    # Single-sample or single-cluster: degenerate but valid
+    # Single-sample or single-cluster
     if n_samples == 1 or k == 1:
         labels = [0] * n_samples
         membership = np.zeros((n_samples, k), dtype=float)
@@ -63,8 +58,7 @@ async def cluster_features(request: ClusterRequest):
             explained_variance=explained,
         )
 
-    # scikit-fuzzy wants data as (features, samples)
-    data = X_reduced.T  # (d, n)
+    data = X_reduced.T
     cntr, u, u0, d, jm, p, fpc = fcluster.cmeans(
         data=data,
         c=k,
@@ -75,11 +69,11 @@ async def cluster_features(request: ClusterRequest):
         seed=0,
     )
 
-    labels = np.argmax(u, axis=0).astype(int).tolist()  # (n,)
+    labels = np.argmax(u, axis=0).astype(int).tolist()
     return ClusterResponse(
         cluster_labels=labels,
-        membership_matrix=u.T.tolist(),  # (n, k)
-        reduced_features=X_reduced.tolist(),  # (n, n_comp)
+        membership_matrix=u.T.tolist(),
+        reduced_features=X_reduced.tolist(),
         explained_variance=explained,
     )
 

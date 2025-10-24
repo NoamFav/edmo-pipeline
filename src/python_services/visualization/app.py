@@ -6,7 +6,7 @@ import numpy as np
 import os
 from typing import Optional
 
-matplotlib.use("Agg")  # headless backend must be set before pyplot import
+matplotlib.use("Agg")
 
 app = FastAPI(title="Visualization Service", version="0.1.0")
 

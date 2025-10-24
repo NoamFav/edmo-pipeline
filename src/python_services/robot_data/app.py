@@ -15,10 +15,6 @@ from dataclasses import dataclass
 
 app = FastAPI(title="Session Analysis Service", version="1.0.0")
 
-# ───────────────────────────────────────────────────────────────────────────
-# Models
-# ───────────────────────────────────────────────────────────────────────────
-
 
 @dataclass
 class Event:
@@ -60,10 +56,6 @@ class PlotRequest(BaseModel):
     timeline_csv: str
     plot_type: str  # "control", "events", "temporal"
 
-
-# ───────────────────────────────────────────────────────────────────────────
-# Parsing
-# ───────────────────────────────────────────────────────────────────────────
 
 LINE_RE = re.compile(
     r"^(?P<time>\d{2}:\d{2}:\d{2}\.\d+)\s+\[.*?\]\s+(?P<msg>.*)$",
@@ -170,11 +162,6 @@ def export_csv(events: list[Event], out_csv: Path):
                     ev.message,
                 ]
             )
-
-
-# ───────────────────────────────────────────────────────────────────────────
-# Feature Extraction
-# ───────────────────────────────────────────────────────────────────────────
 
 
 def compute_control_intervals(
@@ -288,11 +275,6 @@ def extract_features(csv_path: Path) -> dict:
     feats["reaction_time_mean_s"] = float(np.mean(rts)) if rts else 0.0
 
     return feats
-
-
-# ───────────────────────────────────────────────────────────────────────────
-# Visualization
-# ───────────────────────────────────────────────────────────────────────────
 
 
 def plot_control_gantt(df: pd.DataFrame, png_path: Path):
@@ -417,11 +399,6 @@ def plot_temporal_evolution(df: pd.DataFrame, png_path: Path):
     plt.tight_layout()
     plt.savefig(png_path, dpi=150)
     plt.close(fig)
-
-
-# ───────────────────────────────────────────────────────────────────────────
-# Endpoints
-# ───────────────────────────────────────────────────────────────────────────
 
 
 @app.post("/parse_logs")

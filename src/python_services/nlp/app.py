@@ -7,7 +7,6 @@ import re
 
 app = FastAPI(title="NLP Service", version="0.1.0")
 
-# Load embedding model on startup
 embedding_model = None
 keyword_model = None
 sentiment_model = None
