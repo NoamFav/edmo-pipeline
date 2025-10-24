@@ -8,26 +8,31 @@ from scipy.signal import savgol_filter
 import os
 import asyncio
 
-app = FastAPI(title="Robot Movement Tracker",
-              description="Extracts position and velocity data from robot videos using ArUco markers.",
-              version="1.0")
+app = FastAPI(
+    title="Robot Movement Tracker",
+    description="Extracts position and velocity data"
+    + "from robot videos using ArUco markers.",
+    version="1.0",
+)
 
-# CONFIGURATION 
-ARUCO_DICT = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_100) #change for appropiate aruco code
+# CONFIGURATION
+ARUCO_DICT = cv2.aruco.getPredefinedDictionary(
+    cv2.aruco.DICT_5X5_100
+)  # change for appropiate aruco code
 MARKER_ID = None
 TRAIL_LENGTH = 200
 PIXELS_PER_CM = 4.0  # Adjust once camera calibration is known
 SMOOTH_WINDOW = 9
 
 
-# CORE PROCESSING FUNCTION 
+# CORE PROCESSING FUNCTION
 def process_video(video_path: str, output_path: str) -> None:
     """Runs the robot tracking pipeline on the uploaded video."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise IOError("Cannot open video file.")
 
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    _ = cap.get(cv2.CAP_PROP_FPS)
     positions = []
 
     while True:
@@ -75,22 +80,34 @@ def process_video(video_path: str, output_path: str) -> None:
         vy_cm = vy / PIXELS_PER_CM
         v_cm = v / PIXELS_PER_CM
 
-        df = pd.DataFrame({
-            "time_s": t,
-            "x_px": x, "y_px": y,
-            "vx_px_s": vx, "vy_px_s": vy, "v_px_s": v,
-            "vx_cm_s": vx_cm, "vy_cm_s": vy_cm, "v_cm_s": v_cm
-        })
+        df = pd.DataFrame(
+            {
+                "time_s": t,
+                "x_px": x,
+                "y_px": y,
+                "vx_px_s": vx,
+                "vy_px_s": vy,
+                "v_px_s": v,
+                "vx_cm_s": vx_cm,
+                "vy_cm_s": vy_cm,
+                "v_cm_s": v_cm,
+            }
+        )
         df.to_csv(output_path, index=False)
     else:
         raise ValueError("No valid marker detections found.")
 
 
-
 async def run_tracking(video_file: UploadFile) -> str:
-    """Handles async processing of video and returns the path to the output CSV."""
+    """
+    Handles async processing of video
+    and returns the path to the output CSV.
+    """
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_in:
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".mp4",
+        ) as tmp_in:
             data = await video_file.read()
             tmp_in.write(data)
             tmp_in.flush()
@@ -100,7 +117,12 @@ async def run_tracking(video_file: UploadFile) -> str:
         os.close(output_fd)
 
         loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, process_video, input_path, output_path)
+        await loop.run_in_executor(
+            None,
+            process_video,
+            input_path,
+            output_path,
+        )
 
         os.remove(input_path)
         return output_path
@@ -108,11 +130,24 @@ async def run_tracking(video_file: UploadFile) -> str:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/track", summary="Track robot movement from video", response_description="CSV file with robot movement data")
-async def track_robot(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
-    """Accepts a video file and returns a CSV file with position and velocity data."""
+@app.post(
+    "/track",
+    summary="Track robot movement from video",
+    response_description="CSV file with robot movement data",
+)
+async def track_robot(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+):
+    """
+    Accepts a video file
+    and returns a CSV file with position and velocity data.
+    """
     if not file.filename.lower().endswith((".mp4", ".mov", ".avi", ".mkv")):
-        raise HTTPException(status_code=400, detail="Unsupported file format. Please upload a video file.")
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file format. Please upload a video file.",
+        )
 
     output_path = await run_tracking(file)
 
@@ -122,11 +157,10 @@ async def track_robot(background_tasks: BackgroundTasks, file: UploadFile = File
     return FileResponse(
         output_path,
         media_type="text/csv",
-        filename="robot_positions_velocity.csv"
+        filename="robot_positions_velocity.csv",
     )
 
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
