@@ -15,6 +15,7 @@ sentiment_model = None
 @app.on_event("startup")
 async def load_model():
     global embedding_model, keyword_model, sentiment_model
+
     embedding_model = SentenceTransformer(
         "sentence-transformers/all-MiniLM-L6-v2",
     )

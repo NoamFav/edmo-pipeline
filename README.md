@@ -1,309 +1,392 @@
 # EDMO Communication Analysis Pipeline
 
-**Data-Driven Insights into Communication and Collaboration: Enhancing Soft Skill Development in Educational Robotics**
+A modular, multimodal analytics pipeline for measuring collaboration and communication patterns in educational robotics sessions. It processes audio, robot interaction logs, and derived linguistic and behavioral features to generate interpretable, actionable teacher feedback.
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10+-green.svg)](https://www.python.org/)
-[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8.svg)](https://golang.org/)
+---
 
 ## Overview
 
-The EDMO Pipeline analyzes student communication and collaboration during educational robotics tasks, providing teachers with data-driven insights into soft skills development.
+The pipeline detects speaking patterns, turn-taking dynamics, emotional tone, and collaboration strategies during group problem-solving sessions. Outputs are aggregated into visualization dashboards and teacher-oriented summaries that support non-evaluative feedback.
 
-### Key Features
+### Core Features
 
-- 🎤 **Multimodal Analysis**: Audio, video, and robot interaction data
-- 🤖 **Advanced NLP**: Speech-to-text, diarization, emotion detection, embeddings
-- 📊 **Clustering Analysis**: Discover communication patterns and collaboration strategies
-- 📈 **Visualization**: Timeline graphs, radar charts, correlation analysis
-- 👨‍🏫 **Teacher Feedback**: Non-evaluative, constructive insights for educators
-- 🔒 **Privacy-First**: GDPR-compliant, anonymized data handling
+| Component                          | Description                                                          |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| **Speech Processing**              | Whisper-based ASR, PyAnnote diarization, per-speaker segmentation    |
+| **Linguistic Analysis**            | Embeddings, keyword extraction, sentiment classification             |
+| **Non-Verbal Dynamics**            | Turn duration statistics, overlap rate, interruption patterns        |
+| **Clustering & Pattern Discovery** | PCA / Sparse PCA dimensionality reduction + fuzzy C-means clustering |
+| **Visualization Suite**            | Timeline plots, explained-variance charts, radar skill profiles      |
+| **Teacher-Focused Output**         | Structured summaries suitable for formative assessment contexts      |
 
-## Project Information
+---
 
-- **Institution**: Department of Advanced Computing Sciences, Maastricht University
-- **Coordinators**: Katharina Schüller, Rico Möckel
-- **Duration**: September 9, 2025 - January 23, 2026
-- **Program**: BSc Data Science and AI
+## Documentation & Resources
 
-### Team Members
+- **📄 Technical Report**: [EDMO Pipeline Documentation (PDF)](./docs/EDMO_Pipeline_Documentation.pdf) — Comprehensive system architecture, methodology, and evaluation
+- **🎥 Demo Video**: [Pipeline Demonstration (MP4)](./docs/EDMO_Demo.mp4) — End-to-end walkthrough of the analysis pipeline
 
-1. Noam Favier (i6349778)
-2. Daan Vankan (i6331424)
-3. Alexandros Ntoouz/Dawes (i6323296)
-4. Anne Katarina Zambare (i6365696)
-5. Paul Elfering (i6365814)
-6. Vladislav Snytko (i6363101)
-7. Evi Levels (i6368803)
-
-## Quick Start
-
-### Prerequisites
-
-- Python >= 3.10
-- Go >= 1.21
-- FFmpeg
-- CMake >= 3.15
-
-### Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd edmo-pipeline
-
-# Run initialization script
-./scripts/setup/init_repo.sh
-
-# Create virtual environment and install dependencies
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-make install
-
-# Build the pipeline
-make setup
-```
-
-### Running the Pipeline
-
-```bash
-# Start all microservices
-make run
-
-# Or start services individually
-uvicorn src.python_services.nlp.app:app --port 8001
-
-# Process an experiment
-./bin/edmo-pipeline process --experiment experiment_001
-```
+---
 
 ## Architecture
 
-### Pipeline Components
+| Layer                | Technology        | Purpose                                                       |
+| -------------------- | ----------------- | ------------------------------------------------------------- |
+| **Orchestration**    | Go                | Pipeline control, scheduling, data flow, service coordination |
+| **ML/NLP Services**  | Python (FastAPI)  | ASR, diarization, sentiment, clustering, visualization        |
+| **Optional Backend** | C++ (Whisper.cpp) | Efficient ASR on edge hardware                                |
 
-1. **Data Preprocessing**
+### Service Layout
 
-    - Audio normalization (16kHz mono WAV)
-    - Video frame extraction
-    - Robot log parsing and synchronization
+```
+src/python_services/
+├── asr/                # Whisper inference
+├── diarization/        # Speaker segmentation
+├── emotion/            # Sentiment / tone classification
+├── nlp/                # Keyword + embedding extraction
+├── clustering/         # PCA / Fuzzy C-Means / dimensionality reduction
+├── nonverb_features/   # Turn-taking + overlap metrics
+├── robot_data/         # Robot log parsing + control metrics
+└── visualization/      # Plot generation (timeline, radar, variance)
+```
 
-2. **Feature Extraction**
-
-    - Speech-to-Text (Whisper)
-    - Speaker Diarization (Pyannote.audio)
-    - Emotion Detection (Fine-tuned Transformers)
-    - Prosodic Features (Librosa)
-    - Sentence Embeddings (E5/BERT)
-    - Robot Interaction Metrics
-
-3. **Analysis**
-
-    - Dimensionality Reduction (PCA/t-SNE)
-    - Fuzzy C-Means Clustering
-    - Pattern Discovery
-    - PISA CPS Framework Validation
-
-4. **Output Generation**
-    - Student psychological profiles
-    - Timeline visualizations
-    - Teacher feedback reports
-
-### Technology Stack
-
-- **Go**: Pipeline orchestration, data synchronization
-- **Python**: ML services (FastAPI microservices)
-- **C++**: High-performance audio processing (Whisper.cpp)
-- **Libraries**: PyTorch, Transformers, scikit-learn, librosa
+---
 
 ## Project Structure
 
 ```
 edmo-pipeline/
-├── config/              # Configuration files
-├── data/                # Data storage (gitignored)
-│   ├── raw/            # Original data
-│   ├── processed/      # Preprocessed data
-│   ├── features/       # Extracted features
-│   ├── models/         # Model weights
-│   └── outputs/        # Results and visualizations
-├── docs/               # Documentation
-├── experiments/        # Research experiments
-├── notebooks/          # Jupyter notebooks
-├── scripts/            # Utility scripts
+├── config/                      # Pipeline + service configuration
+│   └── dev/
+│       └── config.yaml
+│
+├── data/                        # Runtime data (gitignored in production)
+│   ├── models/                  # Local model cache (HuggingFace / safetensors)
+│   │   └── hf/                  # HuggingFace source-style structure
+│   └── outputs/                 # Pipeline session outputs (clusters, plots, reports)
+│
+├── docs/                        # Documentation, presentations, showcase assets
+│   ├── EDMO_Pipeline_Documentation.pdf  # Technical report
+│   └── EDMO_Demo.mp4                    # Demo video
+│
+├── notebooks/                   # Research + exploration notebooks
+│
+├── scripts/                     # Helper shell scripts
+│   ├── convert_audio.sh
+│   └── extract_frames.sh
+│
 ├── src/
-│   ├── cpp_native/    # C++ modules
-│   ├── go_core/       # Go pipeline orchestrator
-│   ├── python_services/ # Microservices
-│   │   ├── asr/
-│   │   ├── diarization/
-│   │   ├── emotion/
-│   │   ├── nlp/
-│   │   ├── clustering/
-│   │   └── visualization/
-│   └── shared/        # Shared constants and schemas
-└── tests/             # Test suite
-
+│   ├── data_pipeline/           # Preprocessing utilities (normalization, extraction)
+│   │   ├── convert_audio.sh
+│   │   └── extract_frames.sh
+│   │
+│   ├── go_core/                 # Go orchestration layer (main pipeline)
+│   │   ├── clients/             # HTTP clients for each microservice
+│   │   ├── config/
+│   │   ├── orchestrator/        # Pipeline control + analysis logic
+│   │   ├── main.go              # Entry point
+│   │   └── go.mod / go.sum
+│   │
+│   ├── python_services/         # ML/NLP microservice suite (FastAPI)
+│   │   ├── asr/                 # Whisper speech recognition
+│   │   ├── diarization/         # Speaker segmentation
+│   │   ├── emotion/             # Emotion classification
+│   │   ├── nlp/                 # Keywords / embeddings
+│   │   ├── clustering/          # PCA / Fuzzy C-Means / Dim-red
+│   │   ├── nonverb_features/    # Turn-taking + overlap metrics
+│   │   ├── movement_tracker/    # (optional) physical robot movement analytics
+│   │   ├── robot_data/          # Robot log parsing + derived control metrics
+│   │   └── visualization/       # Timeline + radar + variance plots
+│   │
+│   └── nlp/                     # Legacy / development NLP utilities
+│       ├── app.py
+│       ├── processor.py
+│       └── strategies.py
+│
+├── docker-compose.yml           # Multi-service runtime config
+├── Dockerfile                   # Base build image
+├── Makefile                     # Dev automation commands
+├── requirements.txt             # Python dependency root
+├── go.work                      # Go multi-module workspace config
+├── LICENSE
+└── README.md
 ```
 
-## Documentation
+---
 
-- [Architecture Overview](docs/architecture/overview.md)
-- [Installation Guide](docs/guides/setup/installation.md)
-- [Quick Start Guide](docs/guides/usage/quickstart.md)
-- [API Documentation](docs/api/services.md)
+## Quick Start
+
+### Requirements
+
+- Python 3.10+
+- Go 1.21+
+- Docker & Docker Compose
+- FFmpeg (for audio normalization)
+
+### Setup
+
+```bash
+git clone <repo>
+cd <repo-name>
+```
+
+### Running the Pipeline
+
+#### 1. Start All Microservices
+
+```bash
+docker compose up -d --build
+```
+
+This will start all Python FastAPI services (ASR, clustering, emotion, etc.) in detached mode.
+
+#### 2. Run the Go Orchestrator
+
+```bash
+CONFIG_ENV=dev go run ./src/go_core <path/to/audio.wav>
+```
+
+**Example:**
+
+```bash
+CONFIG_ENV=dev go run ./src/go_core ./docs/jfk.wav
+```
+
+The orchestrator will:
+
+1. Send audio to ASR service for transcription
+2. Optionally run diarization for speaker identification
+3. Extract linguistic features (emotion, keywords)
+4. Compute non-verbal metrics (turn-taking, overlap)
+5. Perform clustering on time-windowed features
+6. Generate visualizations (timeline, radar, variance charts)
+7. Save outputs to `data/outputs/session_YYYYMMDD-HHMMSS/`
+
+---
+
+## Output Examples
+
+| Output                   | Format        | Description                                                |
+| ------------------------ | ------------- | ---------------------------------------------------------- |
+| `clusters.json`          | JSON          | Collaboration pattern assignments with membership matrix   |
+| `windows.json`           | JSON          | Time-windowed features (emotions, overlap, speaking share) |
+| `timeline.png`           | Visualization | Speaking timeline by cluster assignment                    |
+| `ExplainedVariances.png` | Visualization | Variance retained per PCA/SPCA dimension                   |
+| `radar.png`              | Visualization | Multi-dimensional skill profile                            |
+
+### Sample Output Structure
+
+```json
+{
+  "session_id": "session_20250124-143052",
+  "audio_path": "/data/inputs/session.wav",
+  "generated_at": "2025-01-24T14:35:18Z",
+  "clusters": [0, 1, 1, 2, 0, 1, ...],
+  "membership_matrix": [[0.85, 0.10, 0.05], ...]
+}
+```
+
+### Viewing Results
+
+After processing completes, check the session output directory:
+
+```bash
+ls -la data/outputs/session_20250124-143052/
+# clusters.json          # Cluster assignments and membership
+# windows.json           # Time-windowed feature vectors
+# timeline.png           # Visual timeline of collaboration patterns
+# ExplainedVariances.png # PCA/SPCA variance analysis
+# radar.png              # Multi-dimensional profile chart
+```
+
+For a complete walkthrough of output interpretation, see the [demo video](./docs/EDMO_Demo.mp4).
+
+---
+
+## Configuration
+
+Edit `config/dev/config.yaml` to adjust:
+
+- Service URLs and ports
+- Feature extraction windows (default: 30s window, 15s overlap)
+- Clustering parameters (default: 5 clusters, 3 PCA components)
+- Dimensionality reduction method (PCA or SparsePCA)
+
+Example configuration snippet:
+
+```yaml
+services:
+    asr:
+        url: "http://127.0.0.1:8002"
+    clustering:
+        url: "http://127.0.0.1:8005"
+
+features:
+    time_window: 30 # seconds
+    overlap: 15 # seconds
+
+clustering:
+    algorithm: "fuzzy_cmeans"
+    n_clusters: 5
+    dimensionality_reduction:
+        method: "PCA" # or "SparsePCA"
+        n_components: 3
+```
+
+For detailed configuration options and system design rationale, refer to the [technical documentation](./docs/EDMO_Pipeline_Documentation.pdf).
+
+---
 
 ## Development
+
+### Service Health Checks
+
+```bash
+# Check if all services are running
+docker compose ps
+
+# View logs for a specific service
+docker compose logs -f asr
+docker compose logs -f clustering
+
+# Test individual service endpoints
+curl http://localhost:8002/health  # ASR
+curl http://localhost:8005/health  # Clustering
+```
+
+### Adding a New Service
+
+1. Create service directory under `src/python_services/`
+2. Implement FastAPI app with required endpoints
+3. Add client code in `src/go_core/clients/`
+4. Register service URL in `config/dev/config.yaml`
+5. Add service to `docker-compose.yml`
+6. Update orchestrator to call new service
 
 ### Running Tests
 
 ```bash
-make test
+# Python service tests
+pytest src/python_services/
+
+# Go orchestrator tests
+cd src/go_core
+go test ./...
 ```
 
-### Code Formatting
+### Code Quality
 
 ```bash
-make format
+# Python linting
+ruff check src/python_services/
+black src/python_services/
+
+# Go formatting
+cd src/go_core
+go fmt ./...
 ```
-
-### Building Documentation
-
-```bash
-make docs
-```
-
-## Research Background
-
-This project builds on research in:
-
-- **Multimodal Learning Analytics** (Ma et al., 2022, 2024; Spikol et al., 2017)
-- **Communication Analysis** (Tsan et al., 2021; D'Angelo & Rajarathnam, 2024)
-- **Educational Robotics** (Malinverni et al., 2021; Möckel et al., 2020)
-- **Collaborative Problem Solving** (PISA 2015 CPS Framework)
-
-## Objectives
-
-### O1: Discover Communication Patterns
-
-Identify patterns in student communication features using data-driven methods (clustering) and validate against the PISA CPS framework.
-
-**KPI**: >75% accuracy in detecting collaborative skills
-
-### O2: Analyze Pattern-Success Relationships
-
-Explore how communication patterns relate to task success (robot performance metrics).
-
-**KPI**: Clear visualizations showing dependencies between CPS skills and performance
-
-### O3: Develop Teacher Feedback System
-
-Generate constructive, non-evaluative feedback for teachers on students' soft skills.
-
-**KPI**: >75% alignment with teacher assessments
-
-## Privacy & Ethics
-
-- ✅ GDPR-compliant data handling
-- ✅ Anonymized student data
-- ✅ No personally identifiable information (PII)
-- ✅ Restricted data access
-- ✅ Non-evaluative feedback (formative, not summative)
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
-
-## Acknowledgments
-
-- Department of Advanced Computing Sciences, Maastricht University
-- EDMO Educational Robotics Project Team
-- All participating teachers and students
-
-## Contact
-
-For questions or collaboration inquiries, please contact the project coordinators:
-
-- Katharina Schüller
-- Rico Möckel
 
 ---
 
-**Status**: Phase 1 Complete (Prototyping) | Phase 2 In Progress (Development)
+## Troubleshooting
 
-```mermaid
-graph TD
-    A[Project Root] --> B[config]
-    B --> B1[dev/config.yaml]
-    B --> B2[prod/config.yaml]
-    B --> B3[test/]
+### Services won't start
 
-    A --> C[data]
-    C --> C1[features → {emotion, robot, speech}]
-    C --> C2[models/]
-    C --> C3[outputs → {clusters, feedback, visualizations}]
-    C --> C4[processed → {audio, diarization, transcripts}]
-    C --> C5[raw → {audio, robot_logs, video}]
-
-    A --> D[docs]
-    D --> D1[agenda.md]
-    D --> D2[api/services.md]
-    D --> D3[architecture/overview.md]
-    D --> D4[guides → {development, setup/installation.md, usage/quickstart.md}]
-    D --> D5[PROJECT_SUMMARY.md]
-    D --> D6[research/]
-
-    A --> E[experiments]
-    E --> E1[exploratory/]
-    E --> E2[prototypes/]
-    E --> E3[validation/]
-
-    A --> F[notebooks]
-    F --> F1[clustering/]
-    F --> F2[eda/]
-    F --> F3[feature_analysis/]
-
-    A --> G[scripts]
-    G --> G1[analysis/]
-    G --> G2[deployment/start_services.sh]
-    G --> G3[preprocessing/download_models.sh]
-    G --> G4[setup/run_tests.sh]
-
-    A --> H[src]
-    H --> H1[cpp_native → {audio, video, whisper, video_tools.cpp, whisper_runner.cpp}]
-    H --> H2[data_pipeline → {convert_audio.sh, extract_frames.sh, preprocess.py}]
-    H --> H3[go_core → {audio.go, pipeline.go, utils.go, video.go}]
-    H --> H4[interfaces → {data_format.md, nlp_api.md}]
-    H --> H5[nlp → {app.py, processor.py, strategies.py}]
-    H --> H6[python_services]
-    H6 --> H6a[asr/app.py]
-    H6 --> H6b[clustering/app.py]
-    H6 --> H6c[diarization/app.py]
-    H6 --> H6d[emotion/app.py]
-    H6 --> H6e[nlp/]
-    H6 --> H6f[visualization/app.py]
-    H --> H7[shared → {config.yaml, constants.go, schema.json}]
-    H --> H8[main.py]
-
-    A --> I[tests]
-    I --> I1[e2e/]
-    I --> I2[integration → {pipeline, services}]
-    I --> I3[unit → {cpp, go, python}]
-    I --> I4[fixtures → {audio, logs, video}]
-
-    A --> J[Root Files]
-    J --> J1[CHANGELOG.md]
-    J --> J2[CONTRIBUTING.md]
-    J --> J3[CODE_OF_CONDUCT.md]
-    J --> J4[LICENSE]
-    J --> J5[README.md]
-    J --> J6[Dockerfile]
-    J --> J7[docker-compose.yml]
-    J --> J8[Makefile]
-    J --> J9[requirements.txt]
-    J --> J10[requirements-dev.txt]
-    J --> J11[SECURITY.md]
+```bash
+# Rebuild containers from scratch
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 ```
+
+### Pipeline can't connect to services
+
+Check that services are listening on expected ports:
+
+```bash
+docker compose ps
+# Verify all services show "Up" status
+
+# Test connectivity
+curl http://localhost:8002/health
+```
+
+### Go module errors
+
+```bash
+cd src/go_core
+go mod tidy
+go mod download
+```
+
+---
+
+## Project Context
+
+Developed at the **Department of Advanced Computing Sciences, Maastricht University** as part of the Educational Robotics **EDMO** program.
+
+### Team Members
+
+- Noam Favier
+- Daan Vankan
+- Alexandros Ntoouz/Dawes
+- Anne Katarina Zambare
+- Paul Elfering
+- Vladislav Snytko
+- Evi Levels
+
+### Academic Context
+
+This pipeline supports research on collaborative learning analytics in educational robotics contexts. For methodology, evaluation results, and pedagogical implications, see the [technical report](./docs/EDMO_Pipeline_Documentation.pdf).
+
+---
+
+## License
+
+MIT — See [LICENSE](LICENSE)
+
+---
+
+## Status
+
+**Development Phase** — actively integrating visualization + teacher reporting modules.
+
+### Roadmap
+
+- [ ] Complete robot_data service integration
+- [ ] Add real-time streaming support
+- [ ] Implement teacher dashboard UI
+- [ ] Add multi-session comparison tools
+- [ ] Deploy containerized production environment
+
+---
+
+## Contributing
+
+We welcome contributions! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit changes (`git commit -am 'Add feature'`)
+4. Push to branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+For major changes, please open an issue first to discuss proposed changes.
+
+---
+
+## Support
+
+For questions or issues:
+
+- Open a GitHub issue
+- Contact: [project maintainer email]
+
+---
+
+## Additional Resources
+
+- **Documentation**: [Technical Report (PDF)](./docs/EDMO_Pipeline_Documentation.pdf)
+- **Demo**: [Pipeline Walkthrough (MP4)](./docs/EDMO_Demo.mp4)
+- **Research Context**: Educational Robotics & Collaborative Learning Analytics
+- **Institution**: Maastricht University, Department of Advanced Computing Sciences
