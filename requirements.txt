@@ -17,7 +17,7 @@ sentencepiece>=0.1.99
 opencv-python>=4.8.0
 
 # NLP utilities
-spacy>=3.7,<3.8
+spacy>=3.7,<3.9
 keybert>=0.8,<0.9
 
 # ASR (Whisper)
