@@ -26,7 +26,7 @@ python-multipart>=0.0.9,<0.1   # FastAPI file uploads
 
 # Data / plotting (robot_data + viz service)
 pandas>=2.0,<2.3
-matplotlib>=3.8,<3.9
+matplotlib>=3.8,<3.11
 
 # pyannote.audio>=3.1
 # torch>=2.1,<2.4            # (already listed above)
