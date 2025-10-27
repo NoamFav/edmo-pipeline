@@ -12,7 +12,7 @@ scikit-fuzzy==0.4.2
 # Deep learning / HF
 torch>=2.6.0
 transformers>=4.38,<5
-sentence-transformers>=2.2,<3
+sentence-transformers>=2.2,<6
 sentencepiece>=0.1.99
 opencv-python>=4.8.0
 
