@@ -25,7 +25,7 @@ openai-whisper==20231117
 python-multipart>=0.0.9,<0.1   # FastAPI file uploads
 
 # Data / plotting (robot_data + viz service)
-pandas>=2.0,<2.3
+pandas>=2.0,<2.4
 matplotlib>=3.8,<3.11
 
 # pyannote.audio>=3.1
