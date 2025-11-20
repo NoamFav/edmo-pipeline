@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Dict, List, Tuple
+import math
 
 class SpeakerFeatures(BaseModel):
     total_speaking_duration: float
@@ -48,31 +49,52 @@ class DiarizationResponse(BaseModel):
 
 class SpeakerF0Stats(BaseModel):
     speaker: str
-    mean_f0: float
-    std_f0: float
-    cv_f0: float
-    skewness_f0: float
-    kurtosis_f0: float
-    min_f0: float
-    max_f0: float
-    range_f0: float
-    normalized_range: float
-    voiced_ratio: float
+    mean_f0: float | None
+    std_f0: float | None
+    cv_f0: float | None
+    skewness_f0: float | None
+    kurtosis_f0: float | None
+    min_f0: float | None
+    max_f0: float | None
+    range_f0: float | None
+    normalized_range: float | None
+    voiced_ratio: float | None
     total_frames: int
     voiced_frames: int
+    
+    @field_validator('*', mode='before')
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+            return None
+        return v
 
 
 class SpeakerSpectralStats(BaseModel):
     speaker: str
-    mean_rms: float
-    std_rms: float
+    mean_rms: float | None
+    std_rms: float | None
     num_segments: int
+    
+    @field_validator('*', mode='before')
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+            return None
+        return v
 
 
 class SpeakerTempoStats(BaseModel):
     speaker: str
-    mean_tempo: float
-    std_tempo: float
-    min_tempo: float
-    max_tempo: float
+    mean_tempo: float | None
+    std_tempo: float | None
+    min_tempo: float | None
+    max_tempo: float | None
     num_segments_analyzed: int
+    
+    @field_validator('*', mode='before')
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+            return None
+        return v

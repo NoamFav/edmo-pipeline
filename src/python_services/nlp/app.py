@@ -88,10 +88,50 @@ async def extract_keywords(request: TextRequest):
 @app.post("/sentiment", response_model=SentimentResponse)
 async def analyze_sentiment(request: TextRequest):
     cleaned = simple_text_preprocessing(request.text)
-    result = sentiment_model(cleaned)[0]
+    
+    max_length = 400  # Model's token limit is 512, but it's safer to lower it
+    
+    # Split text into chunks
+    words = cleaned.split()
+    chunks = []
+    current_chunk = []
+    
+    for word in words:
+        current_chunk.append(word)
+        # Rough estimate: 1 token ≈ 0.75 words
+        if len(' '.join(current_chunk)) > max_length * 0.75:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = []
+    
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
+    # Handle empty text
+    if not chunks:
+        return SentimentResponse(label="neutral", score=0.0)
+    
+    # Process each chunk
+    all_sentiments = {}
+    for chunk in chunks:
+        result = sentiment_model(chunk, truncation=True, max_length=512)[0]
+        label = result["label"]
+        score = result["score"]
+        
+        if label not in all_sentiments:
+            all_sentiments[label] = []
+        all_sentiments[label].append(score)
+    
+    # Average scores across chunks and find dominant sentiment
+    avg_sentiments = {
+        label: sum(scores) / len(scores)
+        for label, scores in all_sentiments.items()
+    }
+    
+    dominant_label = max(avg_sentiments, key=avg_sentiments.get)
+    
     return SentimentResponse(
-        label=result["label"],
-        score=result["score"],
+        label=dominant_label,
+        score=avg_sentiments[dominant_label],
     )
 
 
