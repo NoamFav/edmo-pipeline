@@ -43,7 +43,8 @@ go.work.sum
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[]
+Icon[
+]
 
 # Thumbnails
 ._*
@@ -1046,3 +1047,4 @@ htmlcov/
 # Go
 src/go_core/go.sum
 data/
+output/

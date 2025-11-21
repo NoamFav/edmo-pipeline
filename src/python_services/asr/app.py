@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel
 import whisper
 import tempfile
@@ -29,37 +29,27 @@ class TranscriptionResponse(BaseModel):
 
 
 @app.post("/transcribe", response_model=TranscriptionResponse)
-async def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(audio_path: str = Body(..., description="Audio path")):
     """Transcribe audio file using Whisper."""
-    if file.filename is not None:
-        if not file.filename.endswith((".wav", ".mp3", ".m4a")):
-            raise HTTPException(400, "Unsupported file format")
+    if not audio_path.endswith((".wav", ".mp3", ".m4a")):
+        raise HTTPException(400, "Unsupported file format")
 
-    # Save uploaded file temporarily
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-        content = await file.read()
-        tmp.write(content)
-        tmp_path = tmp.name
-
-    try:
-        kwargs = {"fp16": False}
-        if force_lang:
-            kwargs["language"] = force_lang  # e.g. "en", "nl"
-        result = model.transcribe(tmp_path, **kwargs)
-        segments = [
-            TranscriptionSegment(
-                start=seg["start"],
-                end=seg["end"],
-                text=seg["text"],
-            )
-            for seg in result["segments"]
-        ]
-        return TranscriptionResponse(
-            segments=segments,
-            language=result["language"],
+    kwargs = {"fp16": False}
+    if force_lang:
+        kwargs["language"] = force_lang  # e.g. "en", "nl"
+    result = model.transcribe(audio_path, **kwargs)
+    segments = [
+        TranscriptionSegment(
+            start=seg["start"],
+            end=seg["end"],
+            text=seg["text"],
         )
-    finally:
-        os.unlink(tmp_path)
+        for seg in result["segments"]
+    ]
+    return TranscriptionResponse(
+        segments=segments,
+        language=result["language"],
+    )
 
 
 @app.get("/health")
