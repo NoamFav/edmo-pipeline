@@ -21,7 +21,7 @@ spacy>=3.7,<3.9
 keybert>=0.8,<0.10
 
 # ASR (Whisper)
-openai-whisper==20231117
+openai-whisper==20250625
 python-multipart>=0.0.9,<0.1   # FastAPI file uploads
 
 # Data / plotting (robot_data + viz service)
