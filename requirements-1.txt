@@ -98,7 +98,7 @@ protobuf==6.33.0
 psutil==7.1.2
 ptyprocess==0.7.0
 pure_eval==0.2.3
-pyannote-audio==4.0.1
+pyannote-audio==4.0.2
 pyannote-core==6.0.1
 pyannote-database==6.1.0
 pyannote-metrics==4.0.0
