@@ -25,6 +25,9 @@ uvicorn src.python_services.nlp.app:app --host 0.0.0.0 --port 8004 &
 echo "Starting Nonverbal Features service on port 8005..."
 uvicorn src.python_services.nonverb_features.app:app --host 0.0.0.0 --port 8005 &
 
+echo "Starting Robot Data service on port 8006..."
+uvicorn src.python_services.robot_data.app:app --host 0.0.0.0 --port 8006 &
+
 # Give services time to start
 sleep 10
 
