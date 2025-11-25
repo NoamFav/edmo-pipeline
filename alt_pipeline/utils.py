@@ -16,7 +16,63 @@ SERVICES = {
     'emotion': 'http://127.0.0.1:8003',
     'nlp': 'http://127.0.0.1:8004',
     'nonverb': 'http://127.0.0.1:8005',
+    'robot_data': 'http://127.0.0.1:8006'
 }
+
+
+def find_session_directories(input_dir: str) -> list[str]:
+    """Traverse directory tree and find all directories containing 'session.log'."""
+    session_dirs = []
+    
+    # Walk through all directories
+    for root, dirs, files in os.walk(input_dir):
+        if 'session.log' in files:
+            # Convert to relative path from input_dir
+            session_dirs.append(root)
+    
+    return session_dirs
+
+
+def extract_audio_segment(video_path, output_path, start_time, end_time=None):
+    """Extract audio segment from video using FFmpeg."""
+    cmd = [
+        'ffmpeg',
+        '-i', video_path,
+        '-ss', str(start_time),      # Start time in seconds
+    ]
+    
+    # Only add end time if specified
+    if end_time is not None:
+        cmd.extend(['-to', str(end_time)])
+    
+    cmd.extend([
+        '-vn',                       # No video
+        '-acodec', 'pcm_s16le',           # Copy audio codec (no re-encoding)
+        '-ar', '16000',              # Sample rate (16kHz for speech)
+        '-ac', '1',                  # Mono channel
+        output_path
+    ])
+    
+    subprocess.run(cmd, check=True)
+    
+
+def extract_robot_data_features(session_dir):
+    timeline_csv = f"{session_dir}/robot_data.csv"
+    
+    response = requests.post(
+        f"{SERVICES['robot_data']}/parse_logs",
+        json={
+            'log_dir': session_dir,
+            'output_csv': timeline_csv
+        }
+    )
+    
+    robot_interaction_features = requests.post(
+        f"{SERVICES['robot_data']}/extract_features",
+        json={"timeline_csv": timeline_csv}
+    ).json()
+    
+    return robot_interaction_features
 
 
 def run_asr_and_diarization(audio_path: str) -> Dict[str, Any]:
