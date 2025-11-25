@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import numpy as np
 import sklearn.decomposition as skd
+import sklearn.manifold as skm
 from skfuzzy import cluster as fcluster  # explicit submodule import
 from abc import ABC, abstractmethod
 
@@ -32,7 +33,6 @@ class DimensionalityReductionMethod(ABC):
     def components(self):
         pass
 
-
 class PCA(DimensionalityReductionMethod):
     pca: skd.PCA
 
@@ -52,7 +52,6 @@ class PCA(DimensionalityReductionMethod):
 
     def components(self):
         return self.pca.components_
-
 
 class SPCA(DimensionalityReductionMethod):
     spca: skd.SparsePCA
@@ -112,7 +111,6 @@ class SPCA(DimensionalityReductionMethod):
 
     def components(self):
         return self.spca.components_
-
 
 def create_dim_red_method(
     kind: str, n_dimensions: int = 2
