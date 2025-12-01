@@ -29,7 +29,7 @@ fastapi==0.121.1
 fastapi-cli==0.0.16
 fastapi-cloud-cli==0.3.1
 filelock==3.20.0
-fonttools==4.60.1
+fonttools==4.61.0
 frozenlist==1.8.0
 fsspec==2025.9.0
 googleapis-common-protos==1.71.0
