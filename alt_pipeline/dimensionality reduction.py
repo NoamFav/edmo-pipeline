@@ -178,6 +178,64 @@ def create_dim_red_method(
 def datapoints_to_matrix(datapoints: list[Datapoint]):
     return np.array([dp.dimension_values for dp in datapoints])
 
+def plot_pca_results(X_reduced, dim_red, features_labels, output_dir="output/pca_plots"):
+    """
+    Plots PCA results: scatter plot of reduced data, component loadings, and explained variance.
+
+    Parameters:
+    -----------
+    X_reduced : np.ndarray
+        PCA-reduced data (samples x components)
+    dim_red : object
+        PCA object with methods:
+            - components(): returns PCA component loadings
+            - dimension_explained_variance(): returns explained variance ratio
+    features_labels : list
+        List of feature names corresponding to original data
+    output_dir : str
+        Directory to save plots
+    """
+
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    # === 1. Scatter Plot of PCA-Reduced Data ===
+    plt.figure(figsize=(8, 6))
+    plt.scatter(X_reduced[:, 0], X_reduced[:, 1])
+    plt.xlabel("PC1")
+    plt.ylabel("PC2")
+    plt.title("PCA Projection (PC1 vs PC2)")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, "pca_scatter.png"), dpi=300)
+    plt.close()
+
+    # === 2. PCA Component Loadings ===
+    components = dim_red.components()
+    for i, comp in enumerate(components):
+        plt.figure(figsize=(10, 5))
+        plt.bar(range(len(comp)), comp)
+        plt.xticks(range(len(comp)), features_labels, rotation=45, ha="right")
+        plt.title(f"PCA Component {i + 1} Loadings")
+        plt.ylabel("Weight")
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"component_{i + 1}_loadings.png"), dpi=300)
+        plt.close()
+
+    # === 3. Explained Variance per Component ===
+    explained = dim_red.dimension_explained_variance()
+    plt.figure(figsize=(8, 5))
+    plt.bar(range(1, len(explained) + 1), explained)
+    plt.xlabel("Principal Component")
+    plt.ylabel("Explained Variance Ratio")
+    plt.title("PCA Explained Variance Per Component")
+    plt.xticks(range(1, len(explained) + 1))
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, "explained_variance_bar.png"), dpi=300)
+    plt.close()
+
+    print(f"PCA plots saved in {output_dir}")
+
 datapoints = extract_datapoints("data/test_audio_features.json", selected_features)
 dim_red = create_dim_red_method("PCA", n_dimensions=2)
 datapoints_np_array = extract_datapoints("data/test_audio_features.json", selected_features)
@@ -186,43 +244,7 @@ X = datapoints_to_matrix(datapoints_np_array)
 # --- Fit PCA ---
 X_reduced = dim_red.fit(X)
 
-# plots
-# === 1. Plot PCA-Reduced Data (PC1 vs PC2) ===
-plt.figure(figsize=(8,6))
-plt.scatter(X_reduced[:,0], X_reduced[:,1])
-plt.xlabel("PC1")
-plt.ylabel("PC2")
-plt.title("PCA Projection (PC1 vs PC2)")
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("output/pca_plots/pca_scatter.png", dpi=300)
-plt.close()
-
-# === 2. Plot PCA Component Loadings ===
-components = dim_red.components()
-
-for i, comp in enumerate(components):
-    plt.figure(figsize=(10,5))
-    plt.bar(range(len(comp)), comp)
-    plt.xticks(range(len(comp)), features_labels, rotation=45, ha="right")
-    plt.title(f"PCA Component {i+1} Loadings")
-    plt.ylabel("Weight")
-    plt.tight_layout()
-    plt.savefig(f"output/pca_plots/component_{i+1}_loadings.png", dpi=300)
-    plt.close()
-
-# === 3. Explained Variance per Component (Bar Chart) ===
-explained = dim_red.dimension_explained_variance()
-
-plt.figure(figsize=(8,5))
-plt.bar(range(1, len(explained)+1), explained)
-plt.xlabel("Principal Component")
-plt.ylabel("Explained Variance Ratio")
-plt.title("PCA Explained Variance Per Component")
-plt.xticks(range(1, len(explained)+1))
-plt.tight_layout()
-plt.savefig("output/pca_plots/explained_variance_bar.png", dpi=300)
-plt.close()
+plot_pca_results(X_reduced, dim_red, features_labels)
 
 
 # --- Output prints ---
