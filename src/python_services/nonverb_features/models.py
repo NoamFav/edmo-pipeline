@@ -2,6 +2,7 @@ from pydantic import BaseModel, field_validator
 from typing import Dict, List, Tuple
 import math
 
+
 class SpeakerFeatures(BaseModel):
     total_speaking_duration: float
     total_turns: int
@@ -45,7 +46,7 @@ class SpeakerSegment(BaseModel):
 class DiarizationResponse(BaseModel):
     segments: list[SpeakerSegment]
     num_speakers: int
-    
+
 
 class SpeakerF0Stats(BaseModel):
     speaker: str
@@ -61,8 +62,8 @@ class SpeakerF0Stats(BaseModel):
     voiced_ratio: float | None
     total_frames: int
     voiced_frames: int
-    
-    @field_validator('*', mode='before')
+
+    @field_validator("*", mode="before")
     @classmethod
     def convert_nan_to_none(cls, v):
         if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
@@ -75,8 +76,8 @@ class SpeakerSpectralStats(BaseModel):
     mean_rms: float | None
     std_rms: float | None
     num_segments: int
-    
-    @field_validator('*', mode='before')
+
+    @field_validator("*", mode="before")
     @classmethod
     def convert_nan_to_none(cls, v):
         if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
@@ -91,8 +92,8 @@ class SpeakerTempoStats(BaseModel):
     min_tempo: float | None
     max_tempo: float | None
     num_segments_analyzed: int
-    
-    @field_validator('*', mode='before')
+
+    @field_validator("*", mode="before")
     @classmethod
     def convert_nan_to_none(cls, v):
         if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
