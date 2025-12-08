@@ -52,7 +52,7 @@ joblib==1.5.2
 julius==0.2.7
 jupyter_client==8.6.3
 jupyter_core==5.9.1
-jupyterlab_widgets==3.0.15
+jupyterlab_widgets==3.0.16
 keybert==0.9.0
 kiwisolver==1.4.9
 lazy_loader==0.4
