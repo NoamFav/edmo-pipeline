@@ -4,12 +4,12 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from scipy.signal import savgol_filter
 
-# CONFIGURATION 
+# CONFIGURATION
 ARUCO_DICT = cv2.aruco.getPredefinedDictionary(
     cv2.aruco.DICT_5X5_100
 )  # change for appropriate ArUco code
 MARKER_ID = None
-PIXELS_PER_CM = 4.0   # adjust when camera calibration is known
+PIXELS_PER_CM = 4.0  # adjust when camera calibration is known
 SMOOTH_WINDOW = 9
 
 app = FastAPI(
@@ -22,7 +22,7 @@ app = FastAPI(
 class WindowRequest(BaseModel):
     video_path: str
     window_start: float  # seconds
-    window_end: float    # seconds
+    window_end: float  # seconds
 
 
 def compute_speed_for_window(video_path: str, window_start: float, window_end: float):
@@ -74,7 +74,7 @@ def compute_speed_for_window(video_path: str, window_start: float, window_end: f
     positions = np.array(positions, dtype=float)
     t, x, y = positions[:, 0], positions[:, 1], positions[:, 2]
 
-    # Smooth positions for stability (same as your original code) 
+    # Smooth positions for stability (same as your original code)
     if len(x) > SMOOTH_WINDOW:
         x = savgol_filter(x, SMOOTH_WINDOW, 3)
         y = savgol_filter(y, SMOOTH_WINDOW, 3)

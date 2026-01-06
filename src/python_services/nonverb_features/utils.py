@@ -4,10 +4,14 @@ import librosa
 from scipy import stats as scipy_stats
 
 from src.python_services.nonverb_features.models import (
-    SpeakerFeatures, ConversationMetrics,
-    BasicMetricsResponse, SpeakerSegment,
-    DiarizationResponse, SpeakerF0Stats,
-    SpeakerSpectralStats, SpeakerTempoStats
+    SpeakerFeatures,
+    ConversationMetrics,
+    BasicMetricsResponse,
+    SpeakerSegment,
+    DiarizationResponse,
+    SpeakerF0Stats,
+    SpeakerSpectralStats,
+    SpeakerTempoStats,
 )
 
 
@@ -193,43 +197,47 @@ def group_by_speakers(y, sr, diarization_result: dict):
         speaker = segment.speaker
         start_time = segment.start
         end_time = segment.end
-        
+
         # Convert time to sample indices
         start_sample = int(start_time * sr)
         end_sample = int(end_time * sr)
-        
+
         # Extract the audio segment
         audio_segment = y[start_sample:end_sample]
-        
+
         # Initialize speaker list if not exists
         if speaker not in speaker_audio_segments:
             speaker_audio_segments[speaker] = []
-        
+
         # Append segment with metadata
-        speaker_audio_segments[speaker].append({
-            'audio': audio_segment,
-            'start': start_time,
-            'end': end_time,
-            'duration': end_time - start_time
-        })
-        
+        speaker_audio_segments[speaker].append(
+            {
+                "audio": audio_segment,
+                "start": start_time,
+                "end": end_time,
+                "duration": end_time - start_time,
+            }
+        )
+
     return speaker_audio_segments
 
 
-def extract_f0_curves(speaker_audio_segments, sr, fmin=50, fmax=500, frame_length=512, hop_length=160):
+def extract_f0_curves(
+    speaker_audio_segments, sr, fmin=50, fmax=500, frame_length=512, hop_length=160
+):
     """
     Extract F0 (fundamental frequency) curves for each speaker's audio segments.
     """
     speaker_f0_curves = {}
-    
+
     for speaker, segments in speaker_audio_segments.items():
         print(f"Extracting F0 for {speaker}... ({len(segments)} segments)")
-        
+
         speaker_f0_curves[speaker] = []
-        
+
         for seg in segments:
-            audio_segment = seg['audio']
-            
+            audio_segment = seg["audio"]
+
             # Extract F0 using librosa's pyin algorithm
             f0, voiced_flag, voiced_probs = librosa.pyin(
                 audio_segment,
@@ -237,27 +245,27 @@ def extract_f0_curves(speaker_audio_segments, sr, fmin=50, fmax=500, frame_lengt
                 fmax=fmax,
                 sr=sr,
                 frame_length=frame_length,
-                hop_length=hop_length
+                hop_length=hop_length,
             )
-            
+
             # Create time array for the F0 curve
             times = librosa.frames_to_time(
-                np.arange(len(f0)),
-                sr=sr,
-                hop_length=hop_length
+                np.arange(len(f0)), sr=sr, hop_length=hop_length
             )
-            
+
             # Store F0 curve with metadata
-            speaker_f0_curves[speaker].append({
-                'f0': f0,
-                'voiced_flag': voiced_flag,
-                'voiced_probs': voiced_probs,
-                'times': times,
-                'start': seg['start'],
-                'end': seg['end'],
-                'duration': seg['duration']
-            })
-    
+            speaker_f0_curves[speaker].append(
+                {
+                    "f0": f0,
+                    "voiced_flag": voiced_flag,
+                    "voiced_probs": voiced_probs,
+                    "times": times,
+                    "start": seg["start"],
+                    "end": seg["end"],
+                    "duration": seg["duration"],
+                }
+            )
+
     return speaker_f0_curves
 
 
@@ -275,7 +283,7 @@ def calculate_f0_statistics(speaker_f0_curves) -> List[SpeakerF0Stats]:
         total_frames = 0
 
         for seg in segments:
-            f0 = seg['f0']
+            f0 = seg["f0"]
             # extend even if contains NaNs; we'll filter later
             if f0 is None:
                 continue
@@ -306,7 +314,9 @@ def calculate_f0_statistics(speaker_f0_curves) -> List[SpeakerF0Stats]:
             kurtosis_f0 = float(scipy_stats.kurtosis(voiced_f0))
 
             # Voiced ratio
-            voiced_ratio = float(voiced_frames / total_frames) if total_frames > 0 else 0.0
+            voiced_ratio = (
+                float(voiced_frames / total_frames) if total_frames > 0 else 0.0
+            )
 
             stats_model = SpeakerF0Stats(
                 speaker=speaker,
@@ -321,7 +331,7 @@ def calculate_f0_statistics(speaker_f0_curves) -> List[SpeakerF0Stats]:
                 normalized_range=normalized_range,
                 voiced_ratio=voiced_ratio,
                 total_frames=int(total_frames),
-                voiced_frames=int(voiced_frames)
+                voiced_frames=int(voiced_frames),
             )
         else:
             # No voiced frames found — return zeros but keep counts
@@ -338,7 +348,7 @@ def calculate_f0_statistics(speaker_f0_curves) -> List[SpeakerF0Stats]:
                 normalized_range=0.0,
                 voiced_ratio=0.0,
                 total_frames=int(total_frames),
-                voiced_frames=0
+                voiced_frames=0,
             )
 
         results.append(stats_model)
@@ -346,73 +356,87 @@ def calculate_f0_statistics(speaker_f0_curves) -> List[SpeakerF0Stats]:
     return results
 
 
-def calculate_spectrogram_features(speaker_audio_segments, n_fft=1024, hop_length=512) -> List[SpeakerSpectralStats]:
+def calculate_spectrogram_features(
+    speaker_audio_segments, n_fft=1024, hop_length=512
+) -> List[SpeakerSpectralStats]:
     """
     Calculate spectral features (RMS and std) from spectrograms for each speaker's segments.
-    
+
     Returns a list of SpeakerSpectralStats instances (one per speaker).
     """
     results: List[SpeakerSpectralStats] = []
-    
+
     for speaker, segments in speaker_audio_segments.items():
         rms_values = []
-        
+
         for seg in segments:
-            audio_segment = seg['audio']
-            
+            audio_segment = seg["audio"]
+
             # Compute STFT (spectrogram)
-            spectrogram = librosa.stft(audio_segment, n_fft=n_fft, hop_length=hop_length)
-            
+            spectrogram = librosa.stft(
+                audio_segment, n_fft=n_fft, hop_length=hop_length
+            )
+
             # Get magnitude spectrogram
             magnitude_spec = np.abs(spectrogram)
-            
+
             # Calculate RMS energy for this segment
             # RMS is computed across frequency bins for each time frame, then averaged
-            rms = librosa.feature.rms(S=magnitude_spec, hop_length=hop_length, frame_length=n_fft)[0]
+            rms = librosa.feature.rms(
+                S=magnitude_spec, hop_length=hop_length, frame_length=n_fft
+            )[0]
             mean_rms = np.mean(rms)
             rms_values.append(mean_rms)
-        
+
         # Create model instance with aggregated statistics
         spectral_stats = SpeakerSpectralStats(
             speaker=speaker,
             mean_rms=float(np.mean(rms_values)) if rms_values else 0.0,
             std_rms=float(np.std(rms_values)) if rms_values else 0.0,
-            num_segments=len(rms_values)
+            num_segments=len(rms_values),
         )
         results.append(spectral_stats)
-    
+
     return results
 
 
-def calculate_tempo_features(speaker_audio_segments, sr, hop_length=512) -> List[SpeakerTempoStats]:
+def calculate_tempo_features(
+    speaker_audio_segments, sr, hop_length=512
+) -> List[SpeakerTempoStats]:
     """
     Calculate tempo (BPM) features for each speaker's segments.
-    
+
     Returns a list of SpeakerTempoStats instances (one per speaker).
     """
     results: List[SpeakerTempoStats] = []
-    
+
     for speaker, segments in speaker_audio_segments.items():
         tempo_values = []
-        
+
         for seg in segments:
-            audio_segment = seg['audio']
-            
+            audio_segment = seg["audio"]
+
             if len(audio_segment) < sr * 0.5:
                 continue
-            
+
             try:
                 # Calculate onset strength envelope
-                onset_env = librosa.onset.onset_strength(y=audio_segment, sr=sr, hop_length=hop_length)
-                
+                onset_env = librosa.onset.onset_strength(
+                    y=audio_segment, sr=sr, hop_length=hop_length
+                )
+
                 # Estimate tempo
-                tempo = librosa.feature.tempo(onset_envelope=onset_env, sr=sr, hop_length=hop_length)[0]
+                tempo = librosa.feature.tempo(
+                    onset_envelope=onset_env, sr=sr, hop_length=hop_length
+                )[0]
                 tempo_values.append(float(tempo))
             except Exception as e:
                 # Skip segments where tempo estimation fails
-                print(f"  Warning: Could not estimate tempo for segment at {seg['start']:.2f}s: {e}")
+                print(
+                    f"  Warning: Could not estimate tempo for segment at {seg['start']:.2f}s: {e}"
+                )
                 continue
-        
+
         # Create model instance with aggregated statistics
         if tempo_values:
             tempo_stats = SpeakerTempoStats(
@@ -421,7 +445,7 @@ def calculate_tempo_features(speaker_audio_segments, sr, hop_length=512) -> List
                 std_tempo=float(np.std(tempo_values)),
                 min_tempo=float(np.min(tempo_values)),
                 max_tempo=float(np.max(tempo_values)),
-                num_segments_analyzed=len(tempo_values)
+                num_segments_analyzed=len(tempo_values),
             )
         else:
             tempo_stats = SpeakerTempoStats(
@@ -430,10 +454,10 @@ def calculate_tempo_features(speaker_audio_segments, sr, hop_length=512) -> List
                 std_tempo=0.0,
                 min_tempo=0.0,
                 max_tempo=0.0,
-                num_segments_analyzed=0
+                num_segments_analyzed=0,
             )
             print(f"  Warning: No valid tempo estimates for {speaker}")
-        
+
         results.append(tempo_stats)
-    
+
     return results

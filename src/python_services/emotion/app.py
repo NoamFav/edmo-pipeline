@@ -62,9 +62,7 @@ async def detect_emotion(request: EmotionRequest):
 
     # Average scores across chunks
     emotions = [
-        EmotionScore(
-            label=label, score=sum(scores) / len(scores)
-        )
+        EmotionScore(label=label, score=sum(scores) / len(scores))
         for label, scores in all_emotions.items()
     ]
 
