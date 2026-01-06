@@ -1046,5 +1046,4 @@ htmlcov/
 
 # Go
 src/go_core/go.sum
-data/
 output/

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import os
 from fcmeans import FCM
 from sklearn.cross_decomposition import PLSRegression
+import plotting_pca_clustering
 
 selected_features = [
     "audio_features.nonverbal.basic_metrics.conversation.overlap_duration",
@@ -353,7 +354,6 @@ def plot_pca_results(
 
     print(f"PCA plots saved in {output_dir}")
 
-
 def plot_pls_results(X_scores, dim_red, features_labels, Y=None, file_labels=None, output_dir="output/pls_plots"):
     """
     Plots PLS results: scatter of X_scores, component loadings, explained variance,
@@ -438,7 +438,6 @@ def plot_pls_results(X_scores, dim_red, features_labels, Y=None, file_labels=Non
         print(f"PLS scatter plot (colored by Y) saved to {output_dir}")
     else:
         print("No numeric Y provided, skipping PLS scatter colored by Y.")
-
 
 # --- Fuzzy C-Means Clustering on PCA-reduced data ---
 def perform_fuzzy_cmeans(X_reduced, n_clusters=3, m=2.0, max_iter=1000, error=0.005, random_state=None):
@@ -545,7 +544,6 @@ print(f"Total datapoints: {len(all_datapoints)}")
 
 X = np.array([dp.dimension_values for dp in all_datapoints])
 
-
 # --- Create PCA object with 2 components ---
 dim_red = create_dim_red_method("PCA", n_dimensions=2)
 # --- Fit PCA ---
@@ -556,8 +554,6 @@ plot_pca_results(X_reduced, dim_red, features_labels, file_labels)
 n_clusters = 3
 cluster_labels, u, cntr, fpc = perform_fuzzy_cmeans(X_reduced, n_clusters=n_clusters)
 plot_clusters(X_reduced, cluster_labels)
-
-
 
 # here we do pls
 X = np.array([dp.dimension_values[:-1] for dp in all_datapoints])
