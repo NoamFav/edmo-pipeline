@@ -50,7 +50,11 @@ dim_red = dim_red_clustering_functions.create_dim_red_method("PCA", n_dimensions
 X_reduced = dim_red.fit(X)
 # --- Apply fuzzy C-means ---
 n_clusters = 3
-cluster_labels, u, cntr, fpc = dim_red_clustering_functions.perform_fuzzy_cmeans(X_reduced, n_clusters=n_clusters)
+silhouette_scores_pca ,best_score_pca, best_k_pca, cluster_labels, u, cntr, fpc = dim_red_clustering_functions.perform_fuzzy_cmeans_auto_k(X_reduced)
+print("silhette score: " + str(best_score_pca))
+print("best k: " + str(best_k_pca))
+print("all scores pca: " + str(silhouette_scores_pca))
+
 # here we do pls
 X = np.array([dp.dimension_values[:-1] for dp in all_datapoints])
 # Y: last feature
@@ -59,7 +63,9 @@ Y = np.array([dp.dimension_values[-1] for dp in all_datapoints]).reshape(-1, 1) 
 dim_red_pls = dim_red_clustering_functions.PLS(n_dimensions=2)
 X_pls = dim_red_pls.fit(X, Y)  # X_pls is like PCA-reduced scores
 # Fuzzy C-mean clustering on PLS
-cluster_labels_pls, u, cntr, fpc = dim_red_clustering_functions.perform_fuzzy_cmeans(X_pls, n_clusters=3)
+#cluster_labels_pls, u, cntr, fpc = dim_red_clustering_functions.perform_fuzzy_cmeans(X_pls, n_clusters=3)
+silhouette_scores_pls ,best_score_pls, best_k_pls, cluster_labels_pls, u, cntr, fpc = dim_red_clustering_functions.perform_fuzzy_cmeans_auto_k(X_pls)
+
 
 #generate plots
 plotting_pca_clustering.plot_clusters(X_pls, cluster_labels_pls, output_dir="output/pls_plots")
