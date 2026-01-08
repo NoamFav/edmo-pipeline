@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import numpy as np
 import sklearn.decomposition as skd
-import sklearn.manifold as skm
 from skfuzzy import cluster as fcluster  # explicit submodule import
 from abc import ABC, abstractmethod
 
