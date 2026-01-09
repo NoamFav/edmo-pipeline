@@ -185,37 +185,53 @@ def basic_metrics(
 
 
 def group_by_speakers(y, sr, diarization_result: dict):
-    # Dictionary to store audio segments for each speaker
+    """
+    Group audio samples by speaker based on diarization output.
+
+    Args:
+        y: np.ndarray audio signal (1D)
+        sr: sample rate
+        diarization_result: dict with key "segments"
+
+    Returns:
+        dict: speaker_id -> list of segment dicts
+    """
+
+    segments = diarization_result.get("segments", [])
+
+    # ✅ No speakers detected → return empty dict
+    if not segments:
+        return {}
+
     speaker_audio_segments = {}
 
-    start = diarization_result["segments"][0]["start"]
-    # Iterate through each segment in the diarization result
-    for segment in diarization_result["segments"]:
+    for segment in segments:
         speaker = segment["speaker"]
         start_time = segment["start"]
         end_time = segment["end"]
-        
-        # Convert time to sample indices
-        start_sample = int((start_time - start) * sr)
-        end_sample = int((end_time - start) * sr)
-        
-        # Extract the audio segment
+
+        # Convert time to absolute sample indices
+        start_sample = max(0, int(start_time * sr))
+        end_sample = min(len(y), int(end_time * sr))
+
+        # Skip invalid slices
+        if end_sample <= start_sample:
+            continue
+
         audio_segment = y[start_sample:end_sample]
-        
+
         # Initialize speaker list if not exists
         if speaker not in speaker_audio_segments:
             speaker_audio_segments[speaker] = []
-        
-        # Append segment with metadata
-        speaker_audio_segments[speaker].append({
-            'audio': audio_segment,
-            'start': start_time,
-            'end': end_time,
-            'duration': end_time - start_time
-        })
-        
-    return speaker_audio_segments
 
+        speaker_audio_segments[speaker].append({
+            "audio": audio_segment,
+            "start": start_time,
+            "end": end_time,
+            "duration": end_time - start_time
+        })
+
+    return speaker_audio_segments
 
 def extract_f0_curves(speaker_audio_segments, sr, fmin=70, fmax=500, frame_length=512, hop_length=160):
     """
