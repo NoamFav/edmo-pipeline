@@ -1,0 +1,19 @@
+# EDMO Pipeline Configuration - Production
+
+pipeline:
+  name: "EDMO Communication Analysis"
+  version: "0.1.0"
+  log_level: "INFO"
+
+# Production settings (similar structure, adjusted values)
+audio:
+  sample_rate: 16000
+  channels: 1
+  format: "wav"
+  codec: "pcm_s16le"
+
+privacy:
+  anonymize_data: true
+  gdpr_compliant: true
+  retention_days: 30
+  encrypt_at_rest: true
