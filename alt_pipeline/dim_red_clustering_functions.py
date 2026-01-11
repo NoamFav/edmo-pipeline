@@ -1,4 +1,3 @@
-import json
 import warnings
 
 import numpy as np
@@ -7,7 +6,6 @@ import sklearn.decomposition as skd
 from abc import ABC, abstractmethod
 from fcmeans import FCM
 from sklearn.cross_decomposition import PLSRegression
-import matlab.engine
 
 
 class Datapoint:
@@ -18,55 +16,6 @@ class Datapoint:
         self.dimension_labels = labels
         self.dimension_values = values
 
-def get_by_path(obj, path):
-    try:
-        parts = path.replace("]", "").split(".")
-        for p in parts:
-            if "[" in p:
-                key, idx = p.split("[")
-                obj = obj[key][int(idx)]
-            else:
-                obj = obj[p]
-        return obj
-    except (KeyError, IndexError, TypeError):
-        return None  # return None instead of raising
-
-def extract_datapoints_except_last(filename, feature_paths, feature_labels=None):
-    # load the JSON file
-    with open(filename, 'r') as f:
-        data = json.load(f)
-    audio_windows = {w["window_index"]: w for w in data.get("audio_features", [])}
-    robot_windows = {w["window_index"]: w for w in data.get("robot_speed_features", [])}
-
-    # Intersect window indices and remove last window
-    common_indices = sorted(set(audio_windows.keys()) & set(robot_windows.keys()))
-    if common_indices:
-        common_indices = common_indices[:-1]  # remove last window
-
-    datapoints = []
-
-    for idx in common_indices:
-        window_data = {
-            "audio_features": audio_windows[idx],
-            "robot_speed_features": robot_windows[idx]
-        }
-
-        values = []
-        all_features_present = True
-
-        for path in feature_paths:
-            val = get_by_path(window_data, path)
-            if isinstance(val, (int, float)):
-                values.append(val)
-            else:
-                all_features_present = False
-                break  # skip this window entirely
-
-        if all_features_present:
-            labels_to_use = feature_labels if feature_labels is not None else feature_paths
-            datapoints.append(Datapoint(labels_to_use, values))
-
-    return datapoints
 
 class DimensionalityReductionMethod(ABC):
     # abstract class for the dim red method choice
