@@ -1,11 +1,7 @@
-import json
 import numpy as np
-import sklearn.decomposition as skd
-from abc import ABC, abstractmethod
-from fcmeans import FCM
-from sklearn.cross_decomposition import PLSRegression
 import plotting_pca_clustering
 import dim_red_clustering_functions
+import json_extraction
 
 # set parameters
 selected_features = [
@@ -38,7 +34,7 @@ all_datapoints = []
 file_labels = []  # for coloring
 
 for i, f in enumerate(files):
-    dps = dim_red_clustering_functions.extract_datapoints_except_last(f, selected_features, features_labels)
+    dps = json_extraction.extract_datapoints_except_last(f, selected_features, features_labels)
     all_datapoints.extend(dps)
     file_labels.extend([f"experiment_{i+1}"] * len(dps))  # same label for all windows of this file
 print(f"Total datapoints: {len(all_datapoints)}")
