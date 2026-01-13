@@ -3,6 +3,11 @@ import plotting_pca_clustering
 import dim_red_clustering_functions
 import json_extraction
 
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+
 # set parameters
 selected_features = [
     "audio_features.nonverbal.basic_metrics.conversation.overlap_duration",
@@ -23,10 +28,10 @@ features_labels = [
     "robot_speed"
 ]
 files = [
-    "data/111455_features.json",
-    "data/114654_features.json",
-    "data/133150_features.json",
-    "data/140252_features.json"
+    DATA_DIR / "111455_features.json",
+    DATA_DIR / "114654_features.json",
+    DATA_DIR / "133150_features.json",
+    DATA_DIR / "140252_features.json"
 ]
 
 # --- Extract datapoints with all features present ---

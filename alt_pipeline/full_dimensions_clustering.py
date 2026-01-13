@@ -3,12 +3,16 @@ import numpy as np
 import json_extraction  # your module
 from sklearn.preprocessing import StandardScaler
 import dim_red_clustering_functions
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
 
 files = [
-    "data/111455_features.json",
-    "data/114654_features.json",
-    "data/133150_features.json",
-    "data/140252_features.json"
+    DATA_DIR / "111455_features.json",
+    DATA_DIR / "114654_features.json",
+    DATA_DIR / "133150_features.json",
+    DATA_DIR / "140252_features.json"
 ]
 # --- Step 1: discover common complete features across all files ---
 feature_sets = []
