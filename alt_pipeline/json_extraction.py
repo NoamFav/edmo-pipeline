@@ -1,5 +1,14 @@
 import json
 
+time_features = [
+    "robot_speed_features_window_start",
+    "robot_speed_features_window_index",
+    "robot_speed_features_window_end",
+    "audio_features_window_start",
+    "audio_features_window_end",
+    "audio_features_window_index",
+]
+
 class Datapoint:
     dimension_labels: list[str]
     dimension_values: list[float]
@@ -149,3 +158,65 @@ def path_to_feature_label(path: str) -> str:
     """
     label = path.replace(".", "_").replace("[", "_").replace("]", "")
     return label
+
+def remove_features_from_datapoints(datapoints, labels_to_remove):
+    """
+    Removes dimensions whose labels are in labels_to_remove
+    from each Datapoint object (in-place safe via reconstruction).
+    """
+    cleaned_datapoints = []
+
+    for dp in datapoints:
+        keep_indices = [
+            i for i, label in enumerate(dp.dimension_labels)
+            if label not in labels_to_remove
+        ]
+
+        new_labels = [dp.dimension_labels[i] for i in keep_indices]
+        new_values = [dp.dimension_values[i] for i in keep_indices]
+
+        cleaned_datapoints.append(
+            Datapoint(new_labels, new_values)
+        )
+
+    return cleaned_datapoints
+
+def full_extraction(files, ignore_time_features=True):
+    # --- Step 1: discover common complete features across all files ---
+    feature_sets = []
+
+    for f in files:
+        with open(f, "r") as fh:
+            data = json.load(fh)
+        feature_sets.append(
+            set(find_complete_feature_paths(data))
+        )
+
+    common_feature_paths = sorted(set.intersection(*feature_sets))
+
+    # --- Step 2: generate readable labels ---
+    feature_labels = [path_to_feature_label(p) for p in common_feature_paths]
+
+    # --- Step 3: extract datapoints using shared features ---
+    all_datapoints = []
+    file_labels = []
+
+    for i, f in enumerate(files):
+        dps = extract_datapoints_except_last(
+            f,
+            common_feature_paths,
+            feature_labels=feature_labels
+        )
+        all_datapoints.extend(dps)
+        file_labels.extend([f"experiment_{i + 1}"] * len(dps))
+
+    # --- Step 4: optionally remove time features AFTER extraction ---
+    if ignore_time_features:
+        all_datapoints = remove_features_from_datapoints(
+            all_datapoints,
+            time_features
+        )
+
+        # update feature_labels to match datapoints
+        feature_labels = all_datapoints[0].dimension_labels if all_datapoints else []
+    return feature_labels, all_datapoints
