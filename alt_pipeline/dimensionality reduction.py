@@ -2,7 +2,6 @@ import numpy as np
 import plotting_pca_clustering
 import dim_red_clustering_functions
 import json_extraction
-from sklearn.preprocessing import StandardScaler
 
 """"
 # set parameters
@@ -30,6 +29,12 @@ X_scaled = StandardScaler().fit_transform(X)
 print(feature_labels)
 print([l for l in datapoints[0].dimension_labels if "window" in l])
 
+for i, f in enumerate(files):
+    dps = json_extraction.extract_datapoints_except_last(f, selected_features, features_labels)
+    all_datapoints.extend(dps)
+    file_labels.extend([f"experiment_{i+1}"] * len(dps))  # same label for all windows of this file
+print(f"Total datapoints: {len(all_datapoints)}")
+X = np.array([dp.dimension_values for dp in all_datapoints])
 
 # --- Create PCA object with 2 components ---
 dim_red = dim_red_clustering_functions.create_dim_red_method("PCA", n_dimensions=2)
