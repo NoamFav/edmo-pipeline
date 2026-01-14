@@ -61,6 +61,15 @@ pipeline_btn = tk.Button(
 )
 pipeline_btn.pack(pady=5)
 
+# Assign Clusters Button
+assign_btn = tk.Button(
+    root,
+    text="Assign Audio Clusters",
+    width=20,
+    state=tk.DISABLED
+)
+assign_btn.pack(pady=5)
+
 # Status label
 status_label = tk.Label(
     root,
@@ -182,6 +191,8 @@ def run_pipeline():
             fg="green"
         )
 
+        assign_btn.config(state=tk.NORMAL)
+
     except subprocess.CalledProcessError as e:
         messagebox.showerror(
             "Pipeline error",
@@ -194,9 +205,16 @@ def run_pipeline():
 
     pipeline_btn.config(state=tk.NORMAL)
 
+def assign_audio_clusters():
+    messagebox.showinfo(
+        "Cluster assignment error",
+        "Assign audio clusters is not yet enabled."
+    )
+
 # Bind buttons
 record_btn.config(command=toggle_recording)
 pipeline_btn.config(command=run_pipeline)
+assign_btn.config(command=assign_audio_clusters)
 
 # Run UI
 root.mainloop()
