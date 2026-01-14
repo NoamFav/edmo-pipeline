@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import sounddevice as sd
 import soundfile as sf
 from pathlib import Path
@@ -7,6 +7,7 @@ import time
 import numpy as np
 import subprocess
 import sys
+import os
 
 # Audio Settings
 fs = 44100
@@ -51,6 +52,14 @@ window_spinbox.pack(side=tk.LEFT, padx=5)
 # Start/Stop Button
 record_btn = tk.Button(root, text="Start Recording", width=20)
 record_btn.pack(pady=5)
+
+# Open Archive Button
+open_btn = tk.Button(
+    root,
+    text="Open Session Archive",
+    width=20
+)
+open_btn.pack(pady=5)
 
 # Run Pipeline Button
 pipeline_btn = tk.Button(
@@ -205,6 +214,42 @@ def run_pipeline():
 
     pipeline_btn.config(state=tk.NORMAL)
 
+def open_session_archive():
+    global SESSION_DIR, BASE_DIR, last_recording_path
+
+    selected_dir = filedialog.askdirectory(
+        title="Select session directory"
+    )
+
+    if not selected_dir:
+        return
+
+    selected_dir = Path(selected_dir)
+
+    # Basic validation
+    if not (selected_dir / "session.log").exists():
+        messagebox.showerror(
+            "Invalid session",
+            "Selected folder does not contain session.log"
+        )
+        return
+
+    SESSION_DIR = selected_dir
+    BASE_DIR = SESSION_DIR / "Audio/raw"
+
+    status_label.config(
+        text=f"Loaded session:\n{SESSION_DIR.name}",
+        fg="blue"
+    )
+
+    pipeline_btn.config(state=tk.NORMAL)
+    assign_btn.config(state=tk.DISABLED)
+
+    messagebox.showinfo(
+        "Session loaded",
+        f"Session loaded successfully:\n{SESSION_DIR}"
+    )
+
 def assign_audio_clusters():
     messagebox.showinfo(
         "Cluster assignment error",
@@ -215,6 +260,7 @@ def assign_audio_clusters():
 record_btn.config(command=toggle_recording)
 pipeline_btn.config(command=run_pipeline)
 assign_btn.config(command=assign_audio_clusters)
+open_btn.config(command=open_session_archive)
 
 # Run UI
 root.mainloop()
